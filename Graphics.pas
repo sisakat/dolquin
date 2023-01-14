@@ -44,9 +44,13 @@ type
   public
     constructor Create(Image : TImage);
 
-    procedure DrawRect  (x  : Integer; y  : Integer; Width  : Integer; Height : Integer; Color : TColor);
-    procedure DrawCircle(x  : Integer; y  : Integer; Radius : Integer;                   Color : TColor);
-    procedure DrawLine  (x0 : Integer; y0 : Integer; x1     : Integer; y1     : Integer; Color : TColor);
+    procedure DrawRectangle(x  : Integer; y  : Integer; Width  : Integer; Height : Integer; Color : TColor);
+    procedure DrawCircle   (x  : Integer; y  : Integer; Radius : Integer;                   Color : TColor);
+    procedure DrawLine     (x0 : Integer; y0 : Integer; x1     : Integer; y1     : Integer; Color : TColor);
+    procedure DrawTriangle (x0 : Integer; y0 : Integer;
+                            x1 : Integer; y1 : Integer;
+                            x2 : Integer; y2 : Integer;
+                            Color : TColor);
 
     destructor  Destroy; override;
   end;
@@ -128,7 +132,7 @@ begin
   inherited;
 end; // Destroy()
 
-procedure TPainter.DrawRect(x : Integer; y : Integer; Width : Integer; Height : Integer; Color : TColor);
+procedure TPainter.DrawRectangle(x : Integer; y : Integer; Width : Integer; Height : Integer; Color : TColor);
 var
   dy, dx : Integer;
 begin
@@ -213,6 +217,71 @@ begin
     end; // for
   end; // if ()
 end; // DrawLine()
+
+procedure TPainter.DrawTriangle (
+  x0 : Integer; y0 : Integer;
+  x1 : Integer; y1 : Integer;
+  x2 : Integer; y2 : Integer;
+  Color : TColor);
+  
+  function Sign(
+    x0 : Integer; y0 : Integer;
+    x1 : Integer; y1 : Integer;
+    x2 : Integer; y2 : Integer
+  ) : Double;
+  begin
+    Result := (x0 - x2) * (y1 - y2) - (x1 - x2) * (y0 - y2);
+  end;
+
+  function PointInTriangle(
+    p0 : Integer; p1 : Integer;
+    x0 : Integer; y0 : Integer;
+    x1 : Integer; y1 : Integer;
+    x2 : Integer; y2 : Integer
+  ) : Boolean;
+  var
+    d0, d1, d2     : Double ;
+    HasNeg, HasPos : Boolean;
+  begin
+    d0 := Sign(p0, p1, x0, y0, x1, y1);
+    d1 := Sign(p0, p1, x1, y1, x2, y2);
+    d2 := Sign(p0, p1, x2, y2, x0, y0);
+    HasNeg := (d0 < 0) or (d1 < 0) or (d2 < 0);
+    HasPos := (d0 > 0) or (d1 > 0) or (d2 > 0);
+    Result := not (HasNeg and HasPos);
+  end;
+
+  procedure BoundingBox(
+    x0 : Integer; y0 : Integer;
+    x1 : Integer; y1 : Integer;
+    x2 : Integer; y2 : Integer;
+    var bx0 : Integer; var by0 : Integer;
+    var bx1 : Integer; var by1 : Integer
+  );
+  begin
+    bx0 := Min(Min(x0, x1), x2);
+    by0 := Min(Min(y0, y1), y2);
+    bx1 := Max(Max(x0, x1), x2);
+    by1 := Max(Max(y0, y1), y2);
+  end;
+
+var
+  x  , y             : Integer;
+  bx0, bx1, by0, by1 : Integer;
+begin
+  BoundingBox(x0, y0, x1, y1, x2, y2, bx0, by0, bx1, by1);
+  for y:=by0 to by1 do
+  begin
+    for x:=bx0 to bx1 do
+    begin
+      if (PointInTriangle(x, y, x0, y0, x1, y1, x2, y2)) then
+      begin
+        if not (FImage.InBounds(x, y)) then Continue;
+        FImage.PixelAtIdx[x, y] := Color;
+      end; // if ()
+    end; // for
+  end; // for
+end; // DrawTriangle()
 
 begin
 end.
