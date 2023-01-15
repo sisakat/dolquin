@@ -8,7 +8,8 @@ type
   TColor = Array of Byte;
 
 type
-  TPixel = Array[0..3] of Byte;
+  TPixel    = Array[0..3] of Byte;
+  TPixelPtr = ^TPixel            ;
 
 type
   TImage = class(TObject)
@@ -17,7 +18,8 @@ type
     FWidth  : Integer        ;
     FHeight : Integer        ;
 
-    function  GetLength : Integer;
+    function  GetLength   : Integer  ;
+    function  GetPixelPtr : TPixelPtr;
     procedure SetPixel(Idx : Integer;              Value : TColor); overload;
     procedure SetPixel(w   : Integer; h : Integer; Value : TColor); overload;
     function  GetPixel(Idx : Integer             ) : TColor; overload;
@@ -33,8 +35,9 @@ type
     property Height     : Integer read FHeight    ;
     property Length     : Integer read GetLength  ;
 
-    property PixelAtIdx[i : Integer             ] : TColor read GetPixel write SetPixel;
-    property Pixel     [w : Integer; h : Integer] : TColor read GetPixel write SetPixel;
+    property PixelPtr                             : TPixelPtr read GetPixelPtr            ;
+    property PixelAtIdx[i : Integer             ] : TColor    read GetPixel write SetPixel;
+    property Pixel     [w : Integer; h : Integer] : TColor    read GetPixel write SetPixel;
   end;
 
 type
@@ -96,6 +99,11 @@ function TImage.GetLength : Integer;
 begin
   Result := Width * Height;
 end; // GetLength()
+
+function TImage.GetPixelPtr : TPixelPtr;
+begin
+  Result := @FPixels[0];
+end;
 
 procedure TImage.SetPixel(Idx : Integer; Value : TColor);
 begin

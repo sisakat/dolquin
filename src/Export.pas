@@ -1,11 +1,13 @@
 unit Export;
 
 {$mode objfpc}{$H+}
+{$link stb_image_write.o}
+{$linklib c}
 
 interface
 
 uses
-  Graphics;
+  Graphics, ctypes;
 
 type
   TImageExporter = class(TObject)
@@ -19,10 +21,26 @@ type
     procedure Export(Image : TImage; FileName : String); override;
   end;
 
+type
+  TPNGExporter = class(TImageExporter)
+  public
+    procedure Export(Image : TImage; FileName : String); override;
+  end;
+
+function write_png(
+  FileName     : pcchar   ;
+  x            : cint     ;
+  y            : cint     ;
+  comp         : cint     ;
+  data         : pcuint8
+) : Integer; cdecl; external;
+
 implementation
 
 uses
   Classes, Contnrs, SysUtils;
+
+
 
 procedure TPPMExporter.Export(Image : TImage; FileName : String);
 var
@@ -50,6 +68,17 @@ begin
       raise Exception.Create(Format('Could not write file %s', [FileName]));
     end;
   end; // try..except
+end; // Export()
+
+procedure TPNGExporter.Export(Image : TImage; FileName : String);
+begin
+  write_png(
+    pcchar(PChar(PAnsiChar(AnsiString(FileName)))),
+    Image.Width,
+    Image.Height,
+    4,
+    pcuint8(Image.PixelPtr)
+  );
 end; // Export()
 
 begin

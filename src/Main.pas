@@ -6,13 +6,15 @@ uses
   Export, Graphics, SysUtils;
 
 var
-  Image    : TImage        ;
-  Exporter : TImageExporter;
-  Painter  : TPainter      ;
+  Image       : TImage        ;
+  PPMExporter : TImageExporter;
+  PNGExporter : TImageExporter;
+  Painter     : TPainter      ;
 begin
-  Image    := TImage      .Create(256, 256);
-  Exporter := TPPMExporter.Create          ;
-  Painter  := TPainter    .Create(Image   );
+  Image       := TImage      .Create(256, 256);
+  PPMExporter := TPPMExporter.Create          ;
+  PNGExporter := TPNGExporter.Create          ;
+  Painter     := TPainter    .Create(Image   );
   try
     Image.Fill([0, 0, 0, 0]);
     Painter.DrawRectangle(100, 100, 50, 50, [125, 125, 125, 255]);
@@ -24,10 +26,12 @@ begin
                           230, 10 ,
                           [255, 255, 255, 255]);
     WriteLn('Exporting...');
-    Exporter.Export(Image, 'output.ppm');
+    PPMExporter.Export(Image, 'output.ppm');
+    PNGExporter.Export(Image, 'output.png');
   finally
-    FreeAndNil(Painter );
-    FreeAndNil(Exporter);
-    FreeAndNil(Image   );
+    FreeAndNil(Painter    );
+    FreeAndNil(PNGExporter);
+    FreeAndNil(PPMExporter);
+    FreeAndNil(Image      );
   end;
 end.
