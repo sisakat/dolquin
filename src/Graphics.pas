@@ -217,7 +217,7 @@ begin
 
     for i:=x0 to x1-1 do
     begin
-      for y:=Round(k * i + d) * s to (Round(k * (i + 1) + d)-s) * s do 
+      for y:=Round(k * i + d) * s to Max((Round(k * (i + 1) + d)-s) * s, Round(k * i + d)) do 
       begin
         if not FImage.InBounds(i, y * s) then Continue;
         FImage.PixelAtIdx[i, y * s] := Color;
