@@ -3,7 +3,7 @@ program Main;
 {$mode objfpc}{$H+}
 
 uses
-  Export, Graphics, SysUtils;
+  Export, Graphics, SysUtils, Math;
 
 var
   Image       : TImage        ;
@@ -11,23 +11,21 @@ var
   PNGExporter : TImageExporter;
   Painter     : TPainter      ;
 begin
-  Image       := TImage      .Create(256, 256);
+  WriteLn('Creating image...');
+  Image       := TImage      .Create(512, 512);
   PPMExporter := TPPMExporter.Create          ;
   PNGExporter := TPNGExporter.Create          ;
   Painter     := TPainter    .Create(Image   );
   try
-    Image.Fill([0, 0, 0, 0]);
-    Painter.DrawRectangle(100, 100, 50, 50, [125, 125, 125, 255]);
-    Painter.DrawCircle   (100, 100, 50,     [180, 0  , 0  , 255]);
-    Painter.DrawLine     (255, 255, 0  , 0, [0  , 255, 0  , 255]);
-    Painter.DrawLine     (0  , 255, 128, 0, [0  , 0  , 255, 255]);
-    Painter.DrawTriangle (0  , 0  ,
-                          100, 100,
-                          230, 10 ,
-                          [255, 255, 255, 255]);
+    Image.Fill([20, 20, 20, 255]);
+
+    Painter.DrawRectangle(128, 128, 200, 100, [255, 255, 255, 255]);
+    Painter.DrawRectangle(150, 150, 200, 100, [0  , 0  , 0  , 128]);
+    Painter.DrawTriangle (130, 130, 190, 130, 130, 250, [0, 0, 255, 128]);
+    
     WriteLn('Exporting...');
-    PPMExporter.Export(Image, 'output.ppm');
     PNGExporter.Export(Image, 'output.png');
+    WriteLn('Done.');
   finally
     FreeAndNil(Painter    );
     FreeAndNil(PNGExporter);

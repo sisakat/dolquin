@@ -12,6 +12,12 @@ type
   TPixelPtr = ^TPixel            ;
 
 type
+  TColorBlendMode = (
+    COLOR_BLEND_MODE_NONE, 
+    COLOR_BLEND_MODE_ONE_MINUS_ALPHA
+  );
+
+type
   TImage = class(TObject)
   private
     FPixels : Array of TPixel;
@@ -43,7 +49,8 @@ type
 type
   TPainter = class(TObject)
   private
-    FImage : TImage;
+    FImage          : TImage         ;
+    FColorBlendMode : TColorBlendMode;
   public
     constructor Create(Image : TImage);
 
@@ -56,7 +63,15 @@ type
                             Color : TColor);
 
     destructor  Destroy; override;
+
+    property ColorBlendMode : TColorBlendMode read FColorBlendMode write FColorBlendMode;
   end;
+
+function BlendColor(
+  ColorTOP : TColor; 
+  ColorBOT : TColor; 
+  ColorBlendMode : TColorBlendMode = COLOR_BLEND_MODE_NONE
+) : TPixel;
 
 implementation
 
@@ -133,6 +148,7 @@ constructor TPainter.Create(Image : TImage);
 begin
   inherited Create;
   FImage := Image;
+  FColorBlendMode := COLOR_BLEND_MODE_ONE_MINUS_ALPHA;
 end; // Create()
 
 destructor TPainter.Destroy;
@@ -150,7 +166,7 @@ begin
     for dx:=0 to Width-1 do
     begin
       if x + dx >= FImage.Width then Break;
-      FImage.Pixel[x + dx, y + dy] := Color;
+      FImage.Pixel[x + dx, y + dy] := BlendColor(Color, FImage.Pixel[x + dx, y + dy], FColorBlendMode);
     end; // for
   end; // for
 end; // DrawRect()
@@ -167,7 +183,7 @@ begin
         if (x + dx >= FImage.Width) or (x + dx < 0) then Continue;
         if (dx * dx + dy * dy <= Radius * Radius) then
         begin
-          FImage.Pixel[x + dx, y + dy] := Color;
+          FImage.Pixel[x + dx, y + dy] := BlendColor(Color, FImage.Pixel[x + dx, y + dy], FColorBlendMode);
         end; // if ()
       end; // for
   end; // for
@@ -195,7 +211,7 @@ begin
     for y:=y0 to y1-1 do
     begin
       if not FImage.InBounds(x0, y) then Continue;
-      FImage.PixelAtIdx[x0, y] := Color;
+      FImage.PixelAtIdx[x0, y] := BlendColor(Color, FImage.Pixel[x0, y], FColorBlendMode);
     end;
   end
   else
@@ -220,7 +236,7 @@ begin
       for y:=Round(k * i + d) * s to Max((Round(k * (i + 1) + d)-s) * s, Round(k * i + d)) do 
       begin
         if not FImage.InBounds(i, y * s) then Continue;
-        FImage.PixelAtIdx[i, y * s] := Color;
+        FImage.PixelAtIdx[i, y * s] := BlendColor(Color, FImage.Pixel[i, y * s], FColorBlendMode);
       end; // for
     end; // for
   end; // if ()
@@ -285,11 +301,42 @@ begin
       if (PointInTriangle(x, y, x0, y0, x1, y1, x2, y2)) then
       begin
         if not (FImage.InBounds(x, y)) then Continue;
-        FImage.PixelAtIdx[x, y] := Color;
+        FImage.PixelAtIdx[x, y] := BlendColor(Color, FImage.Pixel[x, y], FColorBlendMode);
       end; // if ()
     end; // for
   end; // for
 end; // DrawTriangle()
+
+// ---------------------------------------
+// Utilities
+// ---------------------------------------
+
+function BlendColor(
+  ColorTOP : TColor;
+  ColorBOT : TColor;
+  ColorBlendMode : TColorBlendMode
+) : TPixel;
+var
+  Alpha : Double;
+begin
+  case ColorBlendMode of
+    COLOR_BLEND_MODE_NONE:
+    begin
+      Result[0] := ColorTOP[0]; 
+      Result[1] := ColorTOP[1];
+      Result[2] := ColorTOP[2];
+      Result[3] := 255;
+    end;
+    COLOR_BLEND_MODE_ONE_MINUS_ALPHA:
+    begin
+      Alpha := ColorTOP[3] / 255.0;
+      Result[0] := Floor(ColorTOP[0] * Alpha) + Floor(ColorBOT[0] * (1.0 - Alpha));
+      Result[1] := Floor(ColorTOP[1] * Alpha) + Floor(ColorBOT[1] * (1.0 - Alpha));
+      Result[2] := Floor(ColorTOP[2] * Alpha) + Floor(ColorBOT[2] * (1.0 - Alpha));
+      Result[3] := Max(ColorTOP[3], ColorBOT[3]);
+    end; 
+  end;
+end; // BlendColor()
 
 begin
 end.
