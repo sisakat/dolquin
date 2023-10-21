@@ -45,11 +45,11 @@ var
   StringList   : TStringList;
   Line         : String;
   StringArray  : TStringArray;
-  StringArray1  : TStringArray;
   Vector3D     : TVector3D;
   Vector3I     : TVector3I;
   VertexCount  : Integer;
   IndexCount   : Integer;
+  NormalCount  : Integer;
 begin
   StringList := TStringList.Create;
   try
@@ -78,10 +78,12 @@ begin
 
     VertexCount := 0;
     IndexCount  := 0;
+    NormalCount := 0;
 
     for i:=0 to StringList.Count-1 do
     begin
       Line := StringList[i];
+      Line := StringReplace(Line, '  ', ' ', [rfReplaceAll]);
       if (Pos('v ', Line) > 0) then
       begin
         // Vertex data
@@ -91,6 +93,17 @@ begin
         Vector3D[_Z_] := StrToFloat(StringArray[_Z_]) * -1;
         FMesh.Vertex[VertexCount] := Vector3D;
         VertexCount := VertexCount + 1;
+      end
+      else
+      if (Pos('vn ', Line) > 0) then
+      begin
+        // Normal data
+        StringArray := Line.Substring(3).Split(' ');
+        Vector3D[_X_] := StrToFloat(StringArray[_X_]);
+        Vector3D[_Y_] := StrToFloat(StringArray[_Y_]);
+        Vector3D[_Z_] := StrToFloat(StringArray[_Z_]);
+        FMesh.Normal[NormalCount] := Vector3D;
+        NormalCount := NormalCount + 1;
       end
       else
       if (Pos('f ', Line) > 0) then

@@ -11,12 +11,15 @@ type
   private
     FVertices : array of TVector3D;
     FIndices  : array of TVector3I;
+    FNormals  : array of TVector3D;
 
     function GetVertex(i : Integer) : TVector3D;
     function GetIndex (i : Integer) : TVector3I;
+    function GetNormal(i : Integer) : TVector3D;
 
     procedure SetVertex(i : Integer; v : TVector3D);
     procedure SetIndex (i : Integer; v : TVector3I);
+    procedure SetNormal(i : Integer; v : TVector3D);
 
     function GetVertexCount : Integer;
     function GetIndexCount  : Integer;
@@ -27,6 +30,7 @@ type
 
     property Vertex[i : Integer] : TVector3D read GetVertex write SetVertex;
     property Index [i : Integer] : TVector3I read GetIndex  write SetIndex ;
+    property Normal[i : Integer] : TVector3D read GetNormal write SetNormal;
     property VertexCount : Integer read GetVertexCount;
     property IndexCount  : Integer read GetIndexCount;
   end;
@@ -42,6 +46,7 @@ begin
 
   SetLength(FVertices, NumVertices);
   SetLength(FIndices , NumIndices );
+  SetLength(FNormals , NumVertices);
 end; // Create()
 
 destructor TMesh.Destroy;
@@ -59,6 +64,11 @@ begin
   Result := FIndices[i];
 end; // GetIndex()
 
+function TMesh.GetNormal(i : Integer) : TVector3D;
+begin
+  Result := FNormals[i];
+end; // GetNormal()
+
 procedure TMesh.SetVertex(i : Integer; v : TVector3D);
 begin
   FVertices[i] := v;
@@ -68,6 +78,11 @@ procedure TMesh.SetIndex(i : Integer; v : TVector3I);
 begin
   FIndices[i] := v;
 end; // SetIndex()
+
+procedure TMesh.SetNormal(i : Integer; v : TVector3D);
+begin
+  FNormals[i] := v;
+end; // SetNormal()
 
 function TMesh.GetVertexCount : Integer;
 begin
