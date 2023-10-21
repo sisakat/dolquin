@@ -216,27 +216,37 @@ begin
   end
   else
   begin
-    // Reverse the direction if specified in wrong order
-    if (x0 > x1) and (y0 > y1) then
-    begin
-      Swap(x0, x1);
-      Swap(y0, y1);
-    end;
-
     // Parameters for regular line equation
     k := (y1 - y0) / (x1 - x0);
     d := y0 - k * x0;
 
-    // Sign change when we have negative slope
-    s := 1;
-    if (k < 0) then s := -1;
+    // Reverse the direction if specified in wrong order
+    if (x0 > x1) then
+    begin
+      Swap(x0, x1);
+    end;
+
+    if (y0 > y1) then
+    begin
+     Swap(y0, y1);
+    end;
+
+    // Output for debug
+    {
+    WriteLn(Format('x0=%d', [x0]));
+    WriteLn(Format('x1=%d', [x1]));
+    WriteLn(Format('y0=%d', [y0]));
+    WriteLn(Format('y1=%d', [y1]));
+    WriteLn(Format('k=%f', [k]));
+    WriteLn(Format('d=%f', [k]));
+    }
 
     for i:=x0 to x1-1 do
     begin
-      for y:=Round(k * i + d) * s to Max((Round(k * (i + 1) + d)-s) * s, Round(k * i + d)) do 
+      for y:=Round(k * i + d) to Max((Round(k * (i + 1) + d)-1), Round(k * i + d)) do 
       begin
-        if not FImage.InBounds(i, y * s) then Continue;
-        FImage.PixelAtIdx[i, y * s] := BlendColor(Color, FImage.Pixel[i, y * s], FColorBlendMode);
+        if not FImage.InBounds(i, y) then Continue;
+        FImage.PixelAtIdx[i, y] := BlendColor(Color, FImage.Pixel[i, y], FColorBlendMode);
       end; // for
     end; // for
   end; // if ()

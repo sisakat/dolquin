@@ -22,6 +22,9 @@ begin
     Painter.DrawRectangle(128, 128, 200, 100, [255, 255, 255, 255]);
     Painter.DrawRectangle(150, 150, 200, 100, [0  , 0  , 0  , 128]);
     Painter.DrawTriangle (130, 130, 190, 130, 130, 250, [0, 0, 255, 128]);
+    Painter.DrawLine     (0  ,   0, 512, 512, [0, 0, 255, 255]);
+    Painter.DrawLine     (512,   0, 0  , 512, [0, 0, 255, 255]);
+    Painter.DrawLine     (300,  10, 100, 50,  [0, 0, 255, 255]);
     
     WriteLn('Exporting...');
     PNGExporter.Export(Image, 'output.png');
