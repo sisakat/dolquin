@@ -250,9 +250,7 @@ begin
 
     for i:=x0 to x1-1 do
     begin
-      //WriteLn(Format('%d', [Max((Round(k * (i + 1) + d)-s) * s, Round(k * i + d))]));
       t := Max((Round(k * (i + 1) + d)-s) * s, Round(k * i + d) * s);
-      //t := Round(k * i + d) * s;
       for y:=Round(k * i + d) * s to t do 
       begin
         if not FImage.InBounds(i, y * s) then Continue;
