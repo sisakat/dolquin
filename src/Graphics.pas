@@ -204,6 +204,8 @@ var
   k : Double ;
   d : Double ;
   s : Integer;
+  t : Integer;
+  Swapped : Boolean;
 begin
   // Check if there is no movement in x (k = 0)
   if (x1 - x0 = 0) then
@@ -216,6 +218,8 @@ begin
   end
   else
   begin
+    Swapped := FALSE;
+
     // Parameters for regular line equation
     k := (y1 - y0) / (x1 - x0);
     d := y0 - k * x0;
@@ -224,6 +228,7 @@ begin
     if (x0 > x1) then
     begin
       Swap(x0, x1);
+      Swapped := TRUE;
     end;
 
     if (y0 > y1) then
@@ -231,22 +236,27 @@ begin
      Swap(y0, y1);
     end;
 
-    // Output for debug
-    {
-    WriteLn(Format('x0=%d', [x0]));
-    WriteLn(Format('x1=%d', [x1]));
-    WriteLn(Format('y0=%d', [y0]));
-    WriteLn(Format('y1=%d', [y1]));
-    WriteLn(Format('k=%f', [k]));
-    WriteLn(Format('d=%f', [k]));
-    }
+    // Output for debug   
+    // WriteLn(Format('x0=%d', [x0]));
+    // WriteLn(Format('x1=%d', [x1]));
+    // WriteLn(Format('y0=%d', [y0]));
+    // WriteLn(Format('y1=%d', [y1]));
+    // WriteLn(Format('k=%f', [k]));
+    // WriteLn(Format('d=%f', [k]));
+    
+    // Sign change when we have negative slope
+    s := 1;
+    if (k < 0) then s := -1;
 
     for i:=x0 to x1-1 do
     begin
-      for y:=Round(k * i + d) to Max((Round(k * (i + 1) + d)-1), Round(k * i + d)) do 
+      //WriteLn(Format('%d', [Max((Round(k * (i + 1) + d)-s) * s, Round(k * i + d))]));
+      t := Max((Round(k * (i + 1) + d)-s) * s, Round(k * i + d) * s);
+      //t := Round(k * i + d) * s;
+      for y:=Round(k * i + d) * s to t do 
       begin
-        if not FImage.InBounds(i, y) then Continue;
-        FImage.PixelAtIdx[i, y] := BlendColor(Color, FImage.Pixel[i, y], FColorBlendMode);
+        if not FImage.InBounds(i, y * s) then Continue;
+        FImage.PixelAtIdx[i, y * s] := BlendColor(Color, FImage.Pixel[i, y * s], FColorBlendMode);
       end; // for
     end; // for
   end; // if ()
