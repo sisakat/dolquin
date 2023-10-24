@@ -33,6 +33,7 @@ type
 
     property Image : TRenderImage read FImage;
     property ColorBlendMode : TColorBlendMode read FColorBlendMode write FColorBlendMode;
+    property DrawColor : TColor read FColor write FColor;
   end;
 
 implementation
@@ -169,7 +170,7 @@ begin
           end
           else
           begin
-            Color := [Floor(FColor[_X_] * d), Floor(FColor[_Y_] * d), Floor(FColor[_Z_] * d), 255];
+            Color := [Floor(FColor[_X_] * d), Floor(FColor[_Y_] * d), Floor(FColor[_Z_] * d), FColor[_W_]];
           end; // if ()
 
           FImage.Pixel[x, y] := BlendColor(Color, FImage.Pixel[x, y], FColorBlendMode);
