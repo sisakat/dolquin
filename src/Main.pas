@@ -17,8 +17,13 @@ begin
   ObjReader   := TObjReader  .Create;
   Renderer    := TRenderer   .Create(2048, 2048);
   try
+    WriteLn('Loading model...');
     ObjReader.Load('african_head.obj');
-    Renderer.Render(ObjReader.Mesh);    
+
+    WriteLn('Rendering...');
+    Renderer .ClearColor([0, 0, 0, 0]); // transparent
+    Renderer .Render(ObjReader.Mesh);    
+    
     WriteLn('Exporting...');
     PNGExporter.Export(Renderer.Image, 'output.png');
     WriteLn('Done.');
