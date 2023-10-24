@@ -173,7 +173,8 @@ begin
 
         if (FImage.Depth[x, y] < z) or not DepthTest then
         begin
-          FImage.Depth[x, y] := z;
+          if DepthTest then 
+            FImage.Depth[x, y] := z;
 
           // Retrieve color from texture
           if (FTexture <> nil) then
