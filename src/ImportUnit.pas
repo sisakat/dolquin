@@ -80,7 +80,8 @@ begin
         end; // for i
       end; // if ()
     finally
-      free_image(Data);
+      if (Data <> nil) then
+        free_image(Data);
     end; // try..finally
   except
     on E: Exception do
