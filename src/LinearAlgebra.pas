@@ -18,9 +18,14 @@ type
   TMatrix4D = array[0..3] of TVector4D;
 
 const
+  X_AXIS : TVector3D = (1, 0, 0);
+  Y_AXIS : TVector3D = (0, 1, 0);
+  Z_AXIS : TVector3D = (0, 0, 1);
+  
   IdentityMatrix3D : TMatrix3D = ((1, 0, 0),
                                   (0, 1, 0),
                                   (0, 0, 1));
+                                  
   IdentityMatrix4D : TMatrix4D = ((1, 0, 0, 0),
                                   (0, 1, 0, 0),
                                   (0, 0, 1, 0),
@@ -31,20 +36,20 @@ procedure WriteVector3D (A : TVector3D);
 procedure WriteVector4D (A : TVector4D);
 procedure WriteMatrix4D (A : TMatrix4D);
 
-function VectorSubtract (A : TVector3D; B : TVector3D   ) : TVector3D; overload;
-function VectorSubtract (A : TVector4D; B : TVector4D   ) : TVector4D; overload;
-function VectorMultiply (A : TVector3D; B : TVector3D   ) : Double; overload;
-function VectorMultiply (A : TVector4D; B : TVector4D   ) : Double; overload;
-function VectorScale    (A : TVector3D; Scalar : Double ) : TVector3D; overload;
-function VectorScale    (A : TVector4D; Scalar : Double ) : TVector4D; overload;
-function VectorNormalize(A : TVector3D) : TVector3D; overload;
-function VectorNormalize(A : TVector4D) : TVector4D; overload;
-function VectorLength   (A : TVector3D) : Double; overload;
-function VectorLength   (A : TVector4D) : Double; overload;
-function VectorCross    (A : TVector3D; B : TVector3D) : TVector3D; overload;
-function VectorCross    (A : TVector4D; B : TVector4D) : TVector4D; overload;
-function To3D           (A : TVector4D) : TVector3D;
-function To4D           (A : TVector3D) : TVector4D;
+function VectorSubtract (A : TVector3D; B : TVector3D  ) : TVector3D; overload;
+function VectorSubtract (A : TVector4D; B : TVector4D  ) : TVector4D; overload;
+function VectorMultiply (A : TVector3D; B : TVector3D  ) : Double   ; overload;
+function VectorMultiply (A : TVector4D; B : TVector4D  ) : Double   ; overload;
+function VectorScale    (A : TVector3D; Scalar : Double) : TVector3D; overload;
+function VectorScale    (A : TVector4D; Scalar : Double) : TVector4D; overload;
+function VectorNormalize(A : TVector3D                 ) : TVector3D; overload;
+function VectorNormalize(A : TVector4D                 ) : TVector4D; overload;
+function VectorLength   (A : TVector3D                 ) : Double   ; overload;
+function VectorLength   (A : TVector4D                 ) : Double   ; overload;
+function VectorCross    (A : TVector3D; B : TVector3D  ) : TVector3D; overload;
+function VectorCross    (A : TVector4D; B : TVector4D  ) : TVector4D; overload;
+function To3D           (A : TVector4D                 ) : TVector3D;
+function To4D           (A : TVector3D                 ) : TVector4D;
 
 function MatrixMultiply (A : TMatrix3D; B : TMatrix3D) : TMatrix3D; overload;
 function MatrixMultiply (A : TMatrix4D; B : TMatrix4D) : TMatrix4D; overload;

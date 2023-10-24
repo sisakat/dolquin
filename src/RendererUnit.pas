@@ -61,9 +61,6 @@ implementation
 uses
   Math, SysUtils;
 
-const
-  Z_AXIS : TVector3D = (0.0, 0.0, 1.0);
-
 constructor TRenderer.Create(Width : Integer; Height : Integer);
 begin
   inherited Create;
