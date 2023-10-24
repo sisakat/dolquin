@@ -32,13 +32,24 @@ type
     procedure ClearColor      (Color : TColor);
     procedure ClearDepthBuffer(              );
     procedure BindTexture     (Image : TImage);
+    
+    // The rendered image (including depth-buffer)
+    property Image : TRenderImage read FImage; 
 
-    property Image           : TRenderImage    read FImage                                 ; 
-    property ColorBlendMode  : TColorBlendMode read FColorBlendMode  write FColorBlendMode ;
-    property DrawColor       : TColor          read FColor           write FColor          ;
-    property DepthTest       : Boolean         read FDepthTest       write FDepthTest      ;
-    property Lighting        : Boolean         read FLighting        write FLighting       ;
-    property BackfaceCulling : Boolean         read FBackfaceCulling write FBackfaceCulling;
+    // Color blending mode when using textures or colors with alpha values.
+    property ColorBlendMode  : TColorBlendMode read FColorBlendMode  write FColorBlendMode;
+    
+    // The base color to use when rendering a primitive.
+    property DrawColor : TColor read FColor write FColor;
+
+    // Writing into and checking the depth-buffer when rendering triangles.
+    property DepthTest : Boolean read FDepthTest write FDepthTest;
+
+    // Light calculations for shaded rendering based on the vertex normal.
+    property Lighting : Boolean read FLighting write FLighting;
+    
+    // A given triangle that is facing away from the camera will not be rendered.
+    property BackfaceCulling : Boolean read FBackfaceCulling write FBackfaceCulling;
   end;
 
 implementation
