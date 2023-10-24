@@ -20,9 +20,13 @@ type
     FLighting        : Boolean        ;
     FBackfaceCulling : Boolean        ;
 
+    FModelMatrix     : TMatrix4D      ;
+    FViewMatrix      : TMatrix4D      ;
+    FProjMatrix      : TMatrix4D      ;
+
   protected
     procedure Rasterize     (v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);
-    procedure RenderTriangle(v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);
+    procedure RenderTriangle(v0 : TVector4D; v1 : TVector4D; v2 : TVector4D);
     
   public
     constructor Create(Width : Integer; Height : Integer);
@@ -70,6 +74,9 @@ begin
   FLighting        := TRUE;
   FBackfaceCulling := TRUE;
   FTexture         := nil;
+  FModelMatrix     := IdentityMatrix4D;
+  FViewMatrix      := IdentityMatrix4D;
+  FProjMatrix      := IdentityMatrix4D;
 
   ClearDepthBuffer;
   ClearColor([0, 0, 0, 255]);
@@ -208,9 +215,12 @@ begin
   end; // for
 end; // Rasterize()
 
-procedure TRenderer.RenderTriangle(v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);
+procedure TRenderer.RenderTriangle(v0 : TVector4D; v1 : TVector4D; v2 : TVector4D);
 begin
-  Rasterize(v0, v1, v2);
+  v0 := MatrixMultiply(FProjMatrix, MatrixMultiply(FViewMatrix, MatrixMultiply(FModelMatrix, v0)));
+  v1 := MatrixMultiply(FProjMatrix, MatrixMultiply(FViewMatrix, MatrixMultiply(FModelMatrix, v1)));
+  v2 := MatrixMultiply(FProjMatrix, MatrixMultiply(FViewMatrix, MatrixMultiply(FModelMatrix, v2)));
+  Rasterize(To3D(v0), To3D(v1), To3D(v2));
 end; // RenderTriangle()
 
 procedure TRenderer.Render(Mesh : TMesh);
@@ -222,9 +232,9 @@ begin
   begin
     FIndexVector := Mesh.Index[i];
     RenderTriangle(
-      Mesh.Vertex[FIndexVector.VerIndices[0]],
-      Mesh.Vertex[FIndexVector.VerIndices[1]],
-      Mesh.Vertex[FIndexVector.VerIndices[2]]
+      To4D(Mesh.Vertex[FIndexVector.VerIndices[0]]),
+      To4D(Mesh.Vertex[FIndexVector.VerIndices[1]]),
+      To4D(Mesh.Vertex[FIndexVector.VerIndices[2]])
     );
   end; // for i
   FMesh := nil;
