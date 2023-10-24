@@ -13,6 +13,9 @@ type
     FImage          : TRenderImage   ;
     FColor          : TColor         ;
     FColorBlendMode : TColorBlendMode;
+    FTexture        : TImage         ;
+    FIndexVector    : TIndexVector   ;
+    FMesh           : TMesh          ;
 
   protected
     procedure Rasterize     (v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);
@@ -25,6 +28,8 @@ type
     procedure Render(Mesh : TMesh);
     procedure ClearColor(Color : TColor);
     procedure ClearDepthBuffer;
+
+    procedure BindTexture(Image : TImage);
 
     property Image : TRenderImage read FImage;
     property ColorBlendMode : TColorBlendMode read FColorBlendMode write FColorBlendMode;
@@ -44,6 +49,7 @@ begin
   FImage          := TRenderImage.Create(Width, Height);
   FColor          := [255, 255, 255, 255];
   FColorBlendMode := COLOR_BLEND_MODE_NONE;
+  FTexture        := nil;
 
   ClearDepthBuffer;
   ClearColor([0, 0, 0, 255]);
@@ -135,7 +141,15 @@ var
   z                      : Double   ;
   bx0, bx1, by0, by1     : Integer  ;
   Vector3D               : TVector3D;
+  uv                     : TVector3D;
+  Color, Pixel           : TColor   ;
+  d                      : Double   ;
 begin
+  Vector3D := VectorCross    (VectorSubtract(v0, v1), VectorSubtract(v0, v2));
+  Vector3D := VectorNormalize(Vector3D);
+  d        := VectorMultiply (Vector3D, Z_AXIS);
+  if (d < 0.0) then Exit;
+
   x0 := Floor((v0[_X_] + 1) * FImage.Width  / 2.0);
   y0 := Floor((v0[_Y_] + 1) * FImage.Height / 2.0);
   x1 := Floor((v1[_X_] + 1) * FImage.Width  / 2.0);
@@ -165,7 +179,28 @@ begin
         if (FImage.Depth[x, y] < z) then
         begin
           FImage.Depth[x, y] := z;
-          FImage.Pixel[x, y] := BlendColor(FColor, FImage.Pixel[x, y], FColorBlendMode);
+
+          if (FTexture <> nil) then
+          begin
+            uv[_X_] := 0.0;
+            uv[_Y_] := 0.0;
+            uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector[1][0]][_X_] * Vector3D[_X_];
+            uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector[1][1]][_X_] * Vector3D[_Y_];
+            uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector[1][2]][_X_] * Vector3D[_Z_];
+
+            uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector[1][0]][_Y_] * Vector3D[_X_];
+            uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector[1][1]][_Y_] * Vector3D[_Y_];
+            uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector[1][2]][_Y_] * Vector3D[_Z_];
+
+            Pixel := FTexture.Pixel[Floor(uv[_X_] * FTexture.Width), Floor(uv[_Y_] * FTexture.Height)];
+            Color := [Floor(Pixel[_X_] * d), Floor(Pixel[_Y_] * d), Floor(Pixel[_Z_] * d), 255];
+          end
+          else
+          begin
+            Color := [Floor(FColor[_X_] * d), Floor(FColor[_Y_] * d), Floor(FColor[_Z_] * d), 255];
+          end; // if ()
+
+          FImage.Pixel[x, y] := BlendColor(Color, FImage.Pixel[x, y], FColorBlendMode);
         end; // if ()
       end; // if ()
     end; // for
@@ -173,35 +208,25 @@ begin
 end; // Rasterize()
 
 procedure TRenderer.RenderTriangle(v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);
-var
-  d          : Double   ;
-  Vector3D   : TVector3D;
 begin
-  Vector3D := VectorCross    (VectorSubtract(v0, v1), VectorSubtract(v0, v2));
-  Vector3D := VectorNormalize(Vector3D);
-  d        := VectorMultiply (Vector3D, Z_AXIS);
-  FColor   := [Floor(255 * d), Floor(255 * d), Floor(255 * d), 255];
-
-  if (d > 0.0) then
-  begin
-    Rasterize(v0, v1, v2);
-  end; // if ()
+  Rasterize(v0, v1, v2);
 end; // RenderTriangle()
 
 procedure TRenderer.Render(Mesh : TMesh);
 var
-  i           : Integer     ;
-  IndexVector : TIndexVector;
+  i : Integer;
 begin
+  FMesh := Mesh;
   for i:=0 to Mesh.IndexCount-1 do
   begin
-    IndexVector := Mesh.Index[i];
+    FIndexVector := Mesh.Index[i];
     RenderTriangle(
-      Mesh.Vertex[IndexVector[0][0]],
-      Mesh.Vertex[IndexVector[0][1]],
-      Mesh.Vertex[IndexVector[0][2]]
+      Mesh.Vertex[FIndexVector[0][0]],
+      Mesh.Vertex[FIndexVector[0][1]],
+      Mesh.Vertex[FIndexVector[0][2]]
     );
   end; // for i
+  FMesh := nil;
 end; // Render()
 
 procedure TRenderer.ClearColor(Color : TColor);
@@ -218,6 +243,11 @@ begin
     FImage.DepthAtIdx[i] := -INFINITY;
   end; // for i
 end; // ClearDeapthBuffer()
+
+procedure TRenderer.BindTexture(Image : TImage);
+begin
+  FTexture := Image;
+end; // BindTexture()
 
 begin
 end.

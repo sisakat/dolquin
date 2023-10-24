@@ -1,4 +1,4 @@
-unit Export;
+unit ExportUnit;
 
 {$mode objfpc}{$H+}
 {$link stb_image_write.o}
@@ -39,8 +39,6 @@ implementation
 
 uses
   Classes, Contnrs, SysUtils;
-
-
 
 procedure TPPMExporter.Export(Image : TImage; FileName : String);
 var
