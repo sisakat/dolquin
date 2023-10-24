@@ -10,12 +10,15 @@ type
   TRenderer = class(TObject)
   public
   private
-    FImage          : TRenderImage   ;
-    FColor          : TColor         ;
-    FColorBlendMode : TColorBlendMode;
-    FTexture        : TImage         ;
-    FIndexVector    : TIndexVector   ;
-    FMesh           : TMesh          ;
+    FImage           : TRenderImage   ;
+    FColor           : TColor         ;
+    FColorBlendMode  : TColorBlendMode;
+    FTexture         : TImage         ;
+    FIndexVector     : TIndexVector   ;
+    FMesh            : TMesh          ;
+    FDepthTest       : Boolean        ;
+    FLighting        : Boolean        ;
+    FBackfaceCulling : Boolean        ;
 
   protected
     procedure Rasterize     (v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);
@@ -25,15 +28,17 @@ type
     constructor Create(Width : Integer; Height : Integer);
     destructor  Destroy; override;
 
-    procedure Render(Mesh : TMesh);
-    procedure ClearColor(Color : TColor);
-    procedure ClearDepthBuffer;
+    procedure Render          (Mesh : TMesh  );
+    procedure ClearColor      (Color : TColor);
+    procedure ClearDepthBuffer(              );
+    procedure BindTexture     (Image : TImage);
 
-    procedure BindTexture(Image : TImage);
-
-    property Image : TRenderImage read FImage;
-    property ColorBlendMode : TColorBlendMode read FColorBlendMode write FColorBlendMode;
-    property DrawColor : TColor read FColor write FColor;
+    property Image           : TRenderImage    read FImage                                 ; 
+    property ColorBlendMode  : TColorBlendMode read FColorBlendMode  write FColorBlendMode ;
+    property DrawColor       : TColor          read FColor           write FColor          ;
+    property DepthTest       : Boolean         read FDepthTest       write FDepthTest      ;
+    property Lighting        : Boolean         read FLighting        write FLighting       ;
+    property BackfaceCulling : Boolean         read FBackfaceCulling write FBackfaceCulling;
   end;
 
 implementation
@@ -47,10 +52,13 @@ const
 constructor TRenderer.Create(Width : Integer; Height : Integer);
 begin
   inherited Create;
-  FImage          := TRenderImage.Create(Width, Height);
-  FColor          := [255, 255, 255, 255];
-  FColorBlendMode := COLOR_BLEND_MODE_NONE;
-  FTexture        := nil;
+  FImage           := TRenderImage.Create(Width, Height);
+  FColor           := [255, 255, 255, 255];
+  FColorBlendMode  := COLOR_BLEND_MODE_NONE;
+  FDepthTest       := TRUE;
+  FLighting        := TRUE;
+  FBackfaceCulling := TRUE;
+  FTexture         := nil;
 
   ClearDepthBuffer;
   ClearColor([0, 0, 0, 255]);
@@ -113,10 +121,18 @@ var
   Color, Pixel           : TColor   ;
   d                      : Double   ;
 begin
-  Vector3D := VectorCross    (VectorSubtract(v0, v1), VectorSubtract(v0, v2));
-  Vector3D := VectorNormalize(Vector3D);
-  d        := VectorMultiply (Vector3D, Z_AXIS);
-  if (d < 0.0) then Exit;
+  if Lighting or BackfaceCulling then
+  begin
+    Vector3D := VectorCross    (VectorSubtract(v0, v1), VectorSubtract(v0, v2));
+    Vector3D := VectorNormalize(Vector3D);
+    d        := VectorMultiply (Vector3D, Z_AXIS);
+  end
+  else
+    d := 1.0;
+  
+  if BackfaceCulling and (d < 0.0) then Exit;
+  if not Lighting then d := 1.0;
+
 
   x0 := Floor((v0[_X_] + 1) * FImage.Width  / 2.0);
   y0 := Floor((v0[_Y_] + 1) * FImage.Height / 2.0);
@@ -144,7 +160,7 @@ begin
         z := z + v1[_Z_] * Vector3D[_Y_];
         z := z + v2[_Z_] * Vector3D[_Z_];
 
-        if (FImage.Depth[x, y] < z) then
+        if (FImage.Depth[x, y] < z) or not DepthTest then
         begin
           FImage.Depth[x, y] := z;
 

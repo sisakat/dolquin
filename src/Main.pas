@@ -11,7 +11,8 @@ uses
   Mesh, 
   MeshReaderObj,
   RendererUnit, 
-  ImportUnit;
+  ImportUnit,
+  DateUtils;
 
 var
   Importer    : TImageImporter;
@@ -20,6 +21,9 @@ var
   ObjReader   : TObjReader    ;
   Renderer    : TRenderer     ;
   Texture     : TImage        ;
+  FromTime    : TDateTime     ;
+  ToTime      : TDateTime     ;
+  DiffMillis  : Integer       ;
 begin
   WriteLn('Creating image...');
   Importer    := TImageImporter.Create;
@@ -35,10 +39,18 @@ begin
     Texture := Importer.Load('african_head_diffuse.tga');
 
     WriteLn('Rendering...');
+    FromTime := Now;
+    Renderer.DepthTest       := TRUE;
+    Renderer.BackFaceCulling := TRUE;
+    Renderer.Lighting        := TRUE;
     Renderer.ColorBlendMode := COLOR_BLEND_MODE_ONE_MINUS_ALPHA;
     Renderer.ClearColor([0, 0, 0, 0]); // transparent
     Renderer.BindTexture(Texture);
-    Renderer.Render(ObjReader.Mesh);    
+    Renderer.Render(ObjReader.Mesh);   
+    ToTime := Now;
+
+    DiffMillis := MilliSecondsBetween(FromTime, ToTime);
+    WriteLn(Format('Render time: %dms (%f fps)', [DiffMillis, 1000/DiffMillis]));
     
     WriteLn('Exporting...');
     PNGExporter.Export(Renderer.Image, 'output.png');
