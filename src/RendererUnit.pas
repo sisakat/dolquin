@@ -61,39 +61,6 @@ begin
 end; // Destroy()
 
 procedure TRenderer.Rasterize(v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);
-  function Barycentric(
-    x0 : Integer; y0 : Integer;
-    x1 : Integer; y1 : Integer;
-    x2 : Integer; y2 : Integer;
-    p0 : Integer; p1 : Integer
-  ) : TVector3D;
-  var
-    u : TVector3D;
-    v : TVector3D;
-  begin
-    u[_X_] := x2 - x0;
-    u[_Y_] := x1 - x0;
-    u[_Z_] := x0 - p0;
-    
-    v[_X_] := y2 - y0;
-    v[_Y_] := y1 - y0;
-    v[_Z_] := y0 - p1;
-    
-    u := VectorCross(u, v);
-
-    if (Abs(u[_Z_]) < 1.0) then
-    begin
-      Result[_X_] := -1.0;
-      Result[_Y_] :=  1.0;
-      Result[_Z_] :=  1.0;
-      Exit;
-    end; // if ()
-
-    Result[_X_] := 1.0 - (u[_X_] + u[_Y_]) / u[_Z_];
-    Result[_Y_] := u[_Y_] / u[_Z_];
-    Result[_Z_] := u[_X_] / u[_Z_];
-  end; // Barycentric()
-
   function Sign(
     x0 : Integer; y0 : Integer;
     x1 : Integer; y1 : Integer;
@@ -134,7 +101,7 @@ procedure TRenderer.Rasterize(v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);
     bx1 := Max(Max(x0, x1), x2);
     by1 := Max(Max(y0, y1), y2);
   end;
-
+  
 var
   x0, x1, y0, y1, x2, y2 : Integer  ;
   x  , y                 : Integer  ;

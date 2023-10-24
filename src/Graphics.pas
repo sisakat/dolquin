@@ -4,6 +4,9 @@ unit Graphics;
 
 interface
 
+uses
+  LinearAlgebra;
+
 type
   TColor = Array of Byte;
 
@@ -89,6 +92,13 @@ function BlendColor(
   ColorBOT : TColor; 
   ColorBlendMode : TColorBlendMode = COLOR_BLEND_MODE_NONE
 ) : TPixel;
+
+function Barycentric(
+  x0 : Integer; y0 : Integer;
+  x1 : Integer; y1 : Integer;
+  x2 : Integer; y2 : Integer;
+  p0 : Integer; p1 : Integer
+) : TVector3D;
 
 implementation
 
@@ -403,6 +413,39 @@ begin
     end; 
   end;
 end; // BlendColor()
+
+function Barycentric(
+  x0 : Integer; y0 : Integer;
+  x1 : Integer; y1 : Integer;
+  x2 : Integer; y2 : Integer;
+  p0 : Integer; p1 : Integer
+) : TVector3D;
+var
+  u : TVector3D;
+  v : TVector3D;
+begin
+  u[_X_] := x2 - x0;
+  u[_Y_] := x1 - x0;
+  u[_Z_] := x0 - p0;
+  
+  v[_X_] := y2 - y0;
+  v[_Y_] := y1 - y0;
+  v[_Z_] := y0 - p1;
+  
+  u := VectorCross(u, v);
+
+  if (Abs(u[_Z_]) < 1.0) then
+  begin
+    Result[_X_] := -1.0;
+    Result[_Y_] :=  1.0;
+    Result[_Z_] :=  1.0;
+    Exit;
+  end; // if ()
+
+  Result[_X_] := 1.0 - (u[_X_] + u[_Y_]) / u[_Z_];
+  Result[_Y_] := u[_Y_] / u[_Z_];
+  Result[_Z_] := u[_X_] / u[_Z_];
+end; // Barycentric()
 
 begin
 end.

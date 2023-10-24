@@ -26,7 +26,7 @@ begin
   PPMExporter := TPPMExporter  .Create;
   PNGExporter := TPNGExporter  .Create;
   ObjReader   := TObjReader    .Create;
-  Renderer    := TRenderer     .Create(8192, 8192);
+  Renderer    := TRenderer     .Create(512, 512);
   try
     WriteLn('Loading model...');
     ObjReader.Load('african_head.obj');
