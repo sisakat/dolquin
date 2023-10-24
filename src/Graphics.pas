@@ -21,7 +21,6 @@ type
   TImage = class(TObject)
   private
     FPixels : Array of TPixel;
-    FDepth  : Array of Double;
     FWidth  : Integer        ;
     FHeight : Integer        ;
 
@@ -31,10 +30,6 @@ type
     procedure SetPixel(w   : Integer; h : Integer; Value : TColor); overload;
     function  GetPixel(Idx : Integer             ) : TColor; overload;
     function  GetPixel(w   : Integer; h : Integer) : TColor; overload;
-    function  GetDepth(Idx : Integer             ) : Double; overload;
-    function  GetDepth(w   : Integer; h : Integer) : Double; overload;
-    procedure SetDepth(Idx : Integer;              Value : Double); overload;
-    procedure SetDepth(w   : Integer; h : Integer; Value : Double); overload;
   public
     constructor Create(Width : Integer; Height : Integer);
     destructor  Destroy; override;
@@ -49,6 +44,21 @@ type
     property PixelPtr                             : TPixelPtr read GetPixelPtr            ;
     property PixelAtIdx[i : Integer             ] : TColor    read GetPixel write SetPixel;
     property Pixel     [w : Integer; h : Integer] : TColor    read GetPixel write SetPixel;
+  end;
+
+type
+  TRenderImage = class(TImage)
+  private
+    FDepth  : Array of Double;
+
+    function  GetDepth(Idx : Integer             ) : Double; overload;
+    function  GetDepth(w   : Integer; h : Integer) : Double; overload;
+    procedure SetDepth(Idx : Integer;              Value : Double); overload;
+    procedure SetDepth(w   : Integer; h : Integer; Value : Double); overload;
+  public
+    constructor Create(w : Integer; h : Integer);
+    destructor  Destroy; override;
+
     property DepthAtIdx[i : Integer             ] : Double    read GetDepth write SetDepth;
     property Depth     [w : Integer; h : Integer] : Double    read GetDepth write SetDepth;
   end;
@@ -92,10 +102,9 @@ uses
 constructor TImage.Create(Width : Integer; Height : Integer);
 begin
   inherited Create;
-  FWidth      := Width     ;
-  FHeight     := Height    ;
+  FWidth      := Width ;
+  FHeight     := Height;
   SetLength(FPixels, Width * Height);
-  SetLength(FDepth , Width * Height);
 end; // Create()
 
 destructor TImage.Destroy;
@@ -148,22 +157,37 @@ begin
   Result := FPixels[Width * h + w];
 end; // GetPixel()
 
-procedure TImage.SetDepth(Idx : Integer; Value : Double);
+// ---------------------------------------
+// TRenderImage
+// ---------------------------------------
+
+constructor TRenderImage.Create(w : Integer; h : Integer);
+begin
+  inherited Create(w, h);
+  SetLength(FDepth , Width * Height);
+end; // Create()
+
+destructor TRenderImage.Destroy;
+begin
+  inherited;
+end; // Destroy()
+
+procedure TRenderImage.SetDepth(Idx : Integer; Value : Double);
 begin
   FDepth[Idx] := Value;
 end; // SetDepth()
 
-procedure TImage.SetDepth(w : Integer; h : Integer; Value : Double);
+procedure TRenderImage.SetDepth(w : Integer; h : Integer; Value : Double);
 begin
   SetDepth(Width * h + w, Value);
 end; // SetDepth()
 
-function TImage.GetDepth(Idx : Integer) : Double;
+function TRenderImage.GetDepth(Idx : Integer) : Double;
 begin
   Result := FDepth[Idx];
 end; // GetDepth()
 
-function TImage.GetDepth(w : Integer; h : Integer) : Double;
+function TRenderImage.GetDepth(w : Integer; h : Integer) : Double;
 begin
   Result := GetDepth(Width * h + w);
 end; // GetDepth()
@@ -233,7 +257,6 @@ var
   d : Double ;
   s : Integer;
   t : Integer;
-  Swapped : Boolean;
 begin
   // Check if there is no movement in x (k = 0)
   if (x1 - x0 = 0) then
@@ -246,8 +269,6 @@ begin
   end
   else
   begin
-    Swapped := FALSE;
-
     // Parameters for regular line equation
     k := (y1 - y0) / (x1 - x0);
     d := y0 - k * x0;
@@ -256,7 +277,6 @@ begin
     if (x0 > x1) then
     begin
       Swap(x0, x1);
-      Swapped := TRUE;
     end;
 
     if (y0 > y1) then

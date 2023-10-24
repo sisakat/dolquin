@@ -10,7 +10,7 @@ type
   TRenderer = class(TObject)
   public
   private
-    FImage          : TImage         ;
+    FImage          : TRenderImage   ;
     FColor          : TColor         ;
     FColorBlendMode : TColorBlendMode;
 
@@ -26,7 +26,7 @@ type
     procedure ClearColor(Color : TColor);
     procedure ClearDepthBuffer;
 
-    property Image : TImage read FImage;
+    property Image : TRenderImage read FImage;
     property ColorBlendMode : TColorBlendMode read FColorBlendMode write FColorBlendMode;
   end;
 
@@ -41,9 +41,9 @@ const
 constructor TRenderer.Create(Width : Integer; Height : Integer);
 begin
   inherited Create;
-  FImage          := TImage  .Create(Width, Height);
-  FColor          := [255, 255, 255, 255]          ;
-  FColorBlendMode := COLOR_BLEND_MODE_NONE         ;
+  FImage          := TRenderImage.Create(Width, Height);
+  FColor          := [255, 255, 255, 255];
+  FColorBlendMode := COLOR_BLEND_MODE_NONE;
 
   ClearDepthBuffer;
   ClearColor([0, 0, 0, 255]);
