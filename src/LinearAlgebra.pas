@@ -17,6 +17,15 @@ type
   TMatrix3D = array[0..2] of TVector3D;
   TMatrix4D = array[0..3] of TVector4D;
 
+const
+  IdentityMatrix3D : TMatrix3D = ((1, 0, 0),
+                                  (0, 1, 0),
+                                  (0, 0, 1));
+  IdentityMatrix4D : TMatrix4D = ((1, 0, 0, 0),
+                                  (0, 1, 0, 0),
+                                  (0, 0, 1, 0),
+                                  (0, 0, 0, 1));
+
 procedure WriteVector3I (A : TVector3I);
 procedure WriteVector3D (A : TVector3D);
 procedure WriteVector4D (A : TVector4D);
@@ -37,8 +46,6 @@ function VectorCross    (A : TVector4D; B : TVector4D) : TVector4D; overload;
 function To3D           (A : TVector4D) : TVector3D;
 function To4D           (A : TVector3D) : TVector4D;
 
-function IdentityMatrix3D : TMatrix3D;
-function IdentityMatrix4D : TMatrix4D;
 function MatrixMultiply (A : TMatrix3D; B : TMatrix3D) : TMatrix3D; overload;
 function MatrixMultiply (A : TMatrix4D; B : TMatrix4D) : TMatrix4D; overload;
 function MatrixMultiply (A : TMatrix4D; V : TVector4D) : TVector4D; overload;
@@ -181,31 +188,6 @@ begin
   Result[_Z_] := A[_Z_];
   Result[_W_] := 1.0   ;
 end; // To4D()
-
-function IdentityMatrix3D : TMatrix3D;
-var
-  i, j : Integer;
-begin
-  for i:=0 to 2 do
-    for j:=0 to 2 do
-      Result[i,j] := 0.0;
-  Result[0,0] := 1.0;
-  Result[1,1] := 1.0;
-  Result[2,2] := 1.0;
-end; // IdentityMatrix3D()
-
-function IdentityMatrix4D : TMatrix4D;
-var
-  i, j : Integer;
-begin
-  for i:=0 to 3 do
-    for j:=0 to 3 do
-      Result[i,j] := 0.0;
-  Result[0,0] := 1.0;
-  Result[1,1] := 1.0;
-  Result[2,2] := 1.0;
-  Result[3,3] := 1.0;
-end; // IdentityMatrix4D()
 
 function MatrixMultiply(A : TMatrix3D; B : TMatrix3D) : TMatrix3D;
 begin
