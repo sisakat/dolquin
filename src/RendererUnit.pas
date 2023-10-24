@@ -101,7 +101,7 @@ procedure TRenderer.Rasterize(v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);
     bx1 := Max(Max(x0, x1), x2);
     by1 := Max(Max(y0, y1), y2);
   end;
-  
+
 var
   x0, x1, y0, y1, x2, y2 : Integer  ;
   x  , y                 : Integer  ;
@@ -147,20 +147,25 @@ begin
         begin
           FImage.Depth[x, y] := z;
 
+          // Retrieve color from texture
           if (FTexture <> nil) then
           begin
             uv[_X_] := 0.0;
             uv[_Y_] := 0.0;
-            uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector[1][0]][_X_] * Vector3D[_X_];
-            uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector[1][1]][_X_] * Vector3D[_Y_];
-            uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector[1][2]][_X_] * Vector3D[_Z_];
+            uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector.TexIndices[0]][_X_] * Vector3D[_X_];
+            uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector.TexIndices[1]][_X_] * Vector3D[_Y_];
+            uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector.TexIndices[2]][_X_] * Vector3D[_Z_];
 
-            uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector[1][0]][_Y_] * Vector3D[_X_];
-            uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector[1][1]][_Y_] * Vector3D[_Y_];
-            uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector[1][2]][_Y_] * Vector3D[_Z_];
+            uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector.TexIndices[0]][_Y_] * Vector3D[_X_];
+            uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector.TexIndices[1]][_Y_] * Vector3D[_Y_];
+            uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector.TexIndices[2]][_Y_] * Vector3D[_Z_];
 
-            Pixel := FTexture.Pixel[Floor(uv[_X_] * FTexture.Width), Floor(uv[_Y_] * FTexture.Height)];
-            Color := [Floor(Pixel[_X_] * d), Floor(Pixel[_Y_] * d), Floor(Pixel[_Z_] * d), 255];
+            Pixel := FTexture.Pixel[Floor(uv[_X_] * FTexture.Width ), 
+                                    Floor(uv[_Y_] * FTexture.Height)];
+            Color := [Floor(Pixel[_X_] * d), 
+                      Floor(Pixel[_Y_] * d), 
+                      Floor(Pixel[_Z_] * d), 
+                      255];
           end
           else
           begin
@@ -188,9 +193,9 @@ begin
   begin
     FIndexVector := Mesh.Index[i];
     RenderTriangle(
-      Mesh.Vertex[FIndexVector[0][0]],
-      Mesh.Vertex[FIndexVector[0][1]],
-      Mesh.Vertex[FIndexVector[0][2]]
+      Mesh.Vertex[FIndexVector.VerIndices[0]],
+      Mesh.Vertex[FIndexVector.VerIndices[1]],
+      Mesh.Vertex[FIndexVector.VerIndices[2]]
     );
   end; // for i
   FMesh := nil;

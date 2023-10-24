@@ -7,7 +7,11 @@ interface
 uses LinearAlgebra;
 
 type
-  TIndexVector = array[0..2] of TVector3I;
+  TIndexVector = record
+    VerIndices : TVector3I;
+    TexIndices : TVector3I;
+    NorIndices : TVector3I;
+  end;
 
 type
   TMesh = class(TObject)

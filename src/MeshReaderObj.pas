@@ -138,24 +138,21 @@ begin
       begin
         // Index data
         StringArray := Line.Substring(2).Split(' ');
-        IndexVector[0][0] := 0;
-        IndexVector[0][1] := 0;
-        IndexVector[0][2] := 0;
 
         for j:=0 to 2 do
         begin
           VertexTextureNormal := StringArray[j].Split('/');
-          IndexVector[0][j] := StrToInt(VertexTextureNormal[0]) - 1;
+          IndexVector.VerIndices[j] := StrToInt(VertexTextureNormal[0]) - 1;
 
           if (Length(VertexTextureNormal) > 1) and (VertexTextureNormal[1] <> '') then
-            IndexVector[1][j] := StrToInt(VertexTextureNormal[1]) - 1
+            IndexVector.TexIndices[j] := StrToInt(VertexTextureNormal[1]) - 1
           else
-            IndexVector[1][j] := 0;
+            IndexVector.TexIndices[j] := 0;
 
           if (Length(VertexTextureNormal) > 2) and (VertexTextureNormal[2] <> '') then
-            IndexVector[2][j] := StrToInt(VertexTextureNormal[2]) - 1
+            IndexVector.NorIndices[j] := StrToInt(VertexTextureNormal[2]) - 1
           else
-            IndexVector[2][j] := 0;
+            IndexVector.NorIndices[j] := 0;
         end; // for j
 
         FMesh.Index[IndexCount] := IndexVector;
