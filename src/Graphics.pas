@@ -21,6 +21,7 @@ type
   TImage = class(TObject)
   private
     FPixels : Array of TPixel;
+    FDepth  : Array of Double;
     FWidth  : Integer        ;
     FHeight : Integer        ;
 
@@ -30,6 +31,10 @@ type
     procedure SetPixel(w   : Integer; h : Integer; Value : TColor); overload;
     function  GetPixel(Idx : Integer             ) : TColor; overload;
     function  GetPixel(w   : Integer; h : Integer) : TColor; overload;
+    function  GetDepth(Idx : Integer             ) : Double; overload;
+    function  GetDepth(w   : Integer; h : Integer) : Double; overload;
+    procedure SetDepth(Idx : Integer;              Value : Double); overload;
+    procedure SetDepth(w   : Integer; h : Integer; Value : Double); overload;
   public
     constructor Create(Width : Integer; Height : Integer);
     destructor  Destroy; override;
@@ -44,6 +49,8 @@ type
     property PixelPtr                             : TPixelPtr read GetPixelPtr            ;
     property PixelAtIdx[i : Integer             ] : TColor    read GetPixel write SetPixel;
     property Pixel     [w : Integer; h : Integer] : TColor    read GetPixel write SetPixel;
+    property DepthAtIdx[i : Integer             ] : Double    read GetDepth write SetDepth;
+    property Depth     [w : Integer; h : Integer] : Double    read GetDepth write SetDepth;
   end;
 
 type
@@ -88,6 +95,7 @@ begin
   FWidth      := Width     ;
   FHeight     := Height    ;
   SetLength(FPixels, Width * Height);
+  SetLength(FDepth , Width * Height);
 end; // Create()
 
 destructor TImage.Destroy;
@@ -139,6 +147,26 @@ function TImage.GetPixel(w : Integer; h : Integer) : TColor;
 begin
   Result := FPixels[Width * h + w];
 end; // GetPixel()
+
+procedure TImage.SetDepth(Idx : Integer; Value : Double);
+begin
+  FDepth[Idx] := Value;
+end; // SetDepth()
+
+procedure TImage.SetDepth(w : Integer; h : Integer; Value : Double);
+begin
+  SetDepth(Width * h + w, Value);
+end; // SetDepth()
+
+function TImage.GetDepth(Idx : Integer) : Double;
+begin
+  Result := FDepth[Idx];
+end; // GetDepth()
+
+function TImage.GetDepth(w : Integer; h : Integer) : Double;
+begin
+  Result := GetDepth(Width * h + w);
+end; // GetDepth()
 
 // ---------------------------------------
 // TPainter
