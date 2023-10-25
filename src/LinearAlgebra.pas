@@ -59,6 +59,7 @@ function RotationMatrixX(AngleRad : Double) : TMatrix4D;
 function RotationMatrixY(AngleRad : Double) : TMatrix4D;
 function RotationMatrixZ(AngleRad : Double) : TMatrix4D;
 function TranslationMatrix(X : Double; Y : Double; Z : Double) : TMatrix4D;
+procedure SetRotationMatrix(var M : TMatrix4D; const R : TMatrix4D);
 
 implementation
 
@@ -281,6 +282,15 @@ begin
   Result[1,3] := Y;
   Result[2,3] := Z;
 end; // TranslationMatrix()
+
+procedure SetRotationMatrix(var M : TMatrix4D; const R : TMatrix4D);
+var
+  i, j : Integer;
+begin
+  for i:=0 to 2 do
+    for j:=0 to 2 do
+      M[i,j] := R[i,j];
+end; // SetRotationMatrix()
 
 begin
 end.
