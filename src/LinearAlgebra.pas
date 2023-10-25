@@ -51,9 +51,14 @@ function VectorCross    (A : TVector4D; B : TVector4D  ) : TVector4D; overload;
 function To3D           (A : TVector4D                 ) : TVector3D;
 function To4D           (A : TVector3D                 ) : TVector4D;
 
-function MatrixMultiply (A : TMatrix3D; B : TMatrix3D) : TMatrix3D; overload;
-function MatrixMultiply (A : TMatrix4D; B : TMatrix4D) : TMatrix4D; overload;
+function MatrixMultiply (B : TMatrix3D; A : TMatrix3D) : TMatrix3D; overload;
+function MatrixMultiply (B : TMatrix4D; A : TMatrix4D) : TMatrix4D; overload;
 function MatrixMultiply (A : TMatrix4D; V : TVector4D) : TVector4D; overload;
+
+function RotationMatrixX(AngleRad : Double) : TMatrix4D;
+function RotationMatrixY(AngleRad : Double) : TMatrix4D;
+function RotationMatrixZ(AngleRad : Double) : TMatrix4D;
+function TranslationMatrix(X : Double; Y : Double; Z : Double) : TMatrix4D;
 
 implementation
 
@@ -194,7 +199,7 @@ begin
   Result[_W_] := 1.0   ;
 end; // To4D()
 
-function MatrixMultiply(A : TMatrix3D; B : TMatrix3D) : TMatrix3D;
+function MatrixMultiply(B : TMatrix3D; A : TMatrix3D) : TMatrix3D;
 begin
   // First row
   Result[0,0] := A[0,0] * B[0,0] + A[0,1] * B[1,0] + A[0,2] * B[2,0];
@@ -210,7 +215,7 @@ begin
   Result[2,2] := A[2,0] * B[0,2] + A[2,1] * B[1,2] + A[2,2] * B[2,2];
 end; // MatrixMultiply()
 
-function MatrixMultiply(A : TMatrix4D; B : TMatrix4D) : TMatrix4D;
+function MatrixMultiply(B : TMatrix4D; A : TMatrix4D) : TMatrix4D;
 begin
   // First row
   Result[0,0] := A[0,0] * B[0,0] + A[0,1] * B[1,0] + A[0,2] * B[2,0] + A[0,3] * B[3,0];
@@ -241,6 +246,41 @@ begin
   Result[_Z_] := A[2,0] * V[0] + A[2,1] * V[1] + A[2,2] * V[2] + A[2,3] * V[3];
   Result[_W_] := A[3,0] * V[0] + A[3,1] * V[1] + A[3,2] * V[2] + A[3,3] * V[3];
 end; // MatrixMultiply()
+
+function RotationMatrixX(AngleRad : Double) : TMatrix4D;
+begin
+  Result := IdentityMatrix4D;
+  Result[1,1] :=  Cos(AngleRad);
+  Result[1,2] := -Sin(AngleRad);
+  Result[2,1] :=  Sin(AngleRad);
+  Result[2,2] :=  Cos(AngleRad);
+end; // RotationMatrixX()
+
+function RotationMatrixY(AngleRad : Double) : TMatrix4D;
+begin
+  Result := IdentityMatrix4D;
+  Result[0,0] :=  Cos(AngleRad);
+  Result[0,2] :=  Sin(AngleRad);
+  Result[2,0] := -Sin(AngleRad);
+  Result[2,2] :=  Cos(AngleRad);
+end; // RotationMatrixY()
+
+function RotationMatrixZ(AngleRad : Double) : TMatrix4D;
+begin
+  Result := IdentityMatrix4D;
+  Result[0,0] :=  Cos(AngleRad);
+  Result[0,1] := -Sin(AngleRad);
+  Result[1,0] :=  Sin(AngleRad);
+  Result[1,1] :=  Cos(AngleRad);
+end; // RotationMatrixZ()
+
+function TranslationMatrix(X : Double; Y : Double; Z : Double) : TMatrix4D;
+begin
+  Result := IdentityMatrix4D;
+  Result[0,3] := X;
+  Result[1,3] := Y;
+  Result[2,3] := Z;
+end; // TranslationMatrix()
 
 begin
 end.

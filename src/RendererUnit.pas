@@ -75,6 +75,9 @@ begin
   FViewMatrix      := IdentityMatrix4D;
   FProjMatrix      := IdentityMatrix4D;
 
+  FModelMatrix[0,0] := -1;
+  FModelMatrix[1,1] := -1.0;
+
   ClearDepthBuffer;
   ClearColor([0, 0, 0, 255]);
 end; // Create()
@@ -214,9 +217,9 @@ end; // Rasterize()
 
 procedure TRenderer.RenderTriangle(v0 : TVector4D; v1 : TVector4D; v2 : TVector4D);
 begin
-  v0 := MatrixMultiply(FProjMatrix, MatrixMultiply(FViewMatrix, MatrixMultiply(FModelMatrix, v0)));
-  v1 := MatrixMultiply(FProjMatrix, MatrixMultiply(FViewMatrix, MatrixMultiply(FModelMatrix, v1)));
-  v2 := MatrixMultiply(FProjMatrix, MatrixMultiply(FViewMatrix, MatrixMultiply(FModelMatrix, v2)));
+  v0 := MatrixMultiply(MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), FProjMatrix), v0);
+  v1 := MatrixMultiply(MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), FProjMatrix), v1);
+  v2 := MatrixMultiply(MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), FProjMatrix), v2);
   Rasterize(To3D(v0), To3D(v1), To3D(v2));
 end; // RenderTriangle()
 
