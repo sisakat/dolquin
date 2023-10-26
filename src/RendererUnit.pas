@@ -24,7 +24,6 @@ type
 
 type
   TRenderer = class(TObject)
-  public
   private
     FCamera          : TCamera        ;
     FImage           : TRenderImage   ;
@@ -40,6 +39,10 @@ type
     FModelMatrix     : TMatrix4D      ;
     FViewMatrix      : TMatrix4D      ;
     FProjMatrix      : TMatrix4D      ;
+    FViewportMatrix  : TMatrix4D      ;
+
+    FViewportWidth   : Integer        ;
+    FViewportHeight  : Integer        ;
 
   protected
     procedure Rasterize     (v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);
@@ -53,6 +56,9 @@ type
     procedure ClearColor      (Color : TColor);
     procedure ClearDepthBuffer(              );
     procedure BindTexture     (Image : TImage);
+    procedure Viewport        (X : Integer; Y : Integer; Width : Integer; Height : Integer);
+    procedure PerspectiveProj (NearPlane : Double; FarPlane : Double; FieldOfView : Double);
+    procedure ModelMatrix     (M : TMatrix4D );
 
     property Camera : TCamera read FCamera;
     
@@ -99,6 +105,8 @@ begin
 end; // GetViewMatrix()
 
 constructor TRenderer.Create(Width : Integer; Height : Integer);
+var
+  i : Integer;
 begin
   inherited Create;
   FCamera          := TCamera.Create;
@@ -112,10 +120,8 @@ begin
   FModelMatrix     := IdentityMatrix4D;
   FViewMatrix      := IdentityMatrix4D;
   FProjMatrix      := IdentityMatrix4D;
-
-  FViewMatrix       := FCamera.ViewMatrix;
-  FProjMatrix[3,2]  := -1/1.5;
-
+  FViewportMatrix  := IdentityMatrix4D;
+  FViewMatrix      := FCamera.ViewMatrix;
   ClearDepthBuffer;
   ClearColor([0, 0, 0, 255]);
 end; // Create()
@@ -123,38 +129,10 @@ end; // Create()
 destructor TRenderer.Destroy;
 begin
   inherited;
-  FreeAndNil(FImage);
   FreeAndNil(FCamera);
 end; // Destroy()
 
 procedure TRenderer.Rasterize(v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);
-  function Sign(
-    x0 : Integer; y0 : Integer;
-    x1 : Integer; y1 : Integer;
-    x2 : Integer; y2 : Integer
-  ) : Double;
-  begin
-    Result := (x0 - x2) * (y1 - y2) - (x1 - x2) * (y0 - y2);
-  end;
-
-  function PointInTriangle(
-    p0 : Integer; p1 : Integer;
-    x0 : Integer; y0 : Integer;
-    x1 : Integer; y1 : Integer;
-    x2 : Integer; y2 : Integer
-  ) : Boolean;
-  var
-    d0, d1, d2     : Double ;
-    HasNeg, HasPos : Boolean;
-  begin
-    d0 := Sign(p0, p1, x0, y0, x1, y1);
-    d1 := Sign(p0, p1, x1, y1, x2, y2);
-    d2 := Sign(p0, p1, x2, y2, x0, y0);
-    HasNeg := (d0 < 0) or (d1 < 0) or (d2 < 0);
-    HasPos := (d0 > 0) or (d1 > 0) or (d2 > 0);
-    Result := not (HasNeg and HasPos);
-  end;
-
   procedure BoundingBox(
     x0 : Integer; y0 : Integer;
     x1 : Integer; y1 : Integer;
@@ -191,65 +169,64 @@ begin
   if BackfaceCulling and (d < 0.0) then Exit;
   if not Lighting then d := 1.0;
 
-
-  x0 := Floor((v0[_X_] + 1) * FImage.Width  / 2.0);
-  y0 := Floor((v0[_Y_] + 1) * FImage.Height / 2.0);
-  x1 := Floor((v1[_X_] + 1) * FImage.Width  / 2.0);
-  y1 := Floor((v1[_Y_] + 1) * FImage.Height / 2.0);
-  x2 := Floor((v2[_X_] + 1) * FImage.Width  / 2.0);
-  y2 := Floor((v2[_Y_] + 1) * FImage.Height / 2.0);
+  x0 := Floor(v0[_X_]);
+  y0 := Floor(v0[_Y_]);
+  x1 := Floor(v1[_X_]);
+  y1 := Floor(v1[_Y_]);
+  x2 := Floor(v2[_X_]);
+  y2 := Floor(v2[_Y_]);
 
   BoundingBox(x0, y0, x1, y1, x2, y2, bx0, by0, bx1, by1);
   for y:=by0 to by1 do
   begin
     for x:=bx0 to bx1 do
     begin
-      if (PointInTriangle(x, y, x0, y0, x1, y1, x2, y2)) then
+      if not (FImage.InBounds(x, y)) then Continue;
+      Vector3D := Barycentric(x0, y0, x1, y1, x2, y2, x, y);
+      if (Vector3D[_X_] < 0) or (Vector3D[_Y_] < 0) or (Vector3D[_Z_] < 0) then
+        Continue;
+
+      // Find the Z-value of the pixel by multiplying the
+      // triangle vertices with the barycentric coordinates of the pixel.
+      z := 0.0;
+      z := z + v0[_Z_] * Vector3D[_X_];
+      z := z + v1[_Z_] * Vector3D[_Y_];
+      z := z + v2[_Z_] * Vector3D[_Z_];
+
+      if (FImage.Depth[x, y] > z) or not DepthTest then
       begin
-        if not (FImage.InBounds(x, y)) then Continue;
-        Vector3D := Barycentric(x0, y0, x1, y1, x2, y2, x, y);
-        if (Vector3D[_X_] < 0) or (Vector3D[_Y_] < 0) or (Vector3D[_Z_] < 0) then
-          Continue;
+        if DepthTest then 
+          FImage.Depth[x, y] := z;
 
-        // Find the Z-value of the pixel by multiplying the
-        // triangle vertices with the barycentric coordinates of the pixel.
-        z := 0.0;
-        z := z + v0[_Z_] * Vector3D[_X_];
-        z := z + v1[_Z_] * Vector3D[_Y_];
-        z := z + v2[_Z_] * Vector3D[_Z_];
-
-        if (FImage.Depth[x, y] < z) or not DepthTest then
+        // Retrieve color from texture
+        if (FTexture <> nil) then
         begin
-          if DepthTest then 
-            FImage.Depth[x, y] := z;
+          uv[_X_] := 0.0;
+          uv[_Y_] := 0.0;
+          uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector.TexIndices[0]][_X_] * Vector3D[_X_];
+          uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector.TexIndices[1]][_X_] * Vector3D[_Y_];
+          uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector.TexIndices[2]][_X_] * Vector3D[_Z_];
 
-          // Retrieve color from texture
-          if (FTexture <> nil) then
-          begin
-            uv[_X_] := 0.0;
-            uv[_Y_] := 0.0;
-            uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector.TexIndices[0]][_X_] * Vector3D[_X_];
-            uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector.TexIndices[1]][_X_] * Vector3D[_Y_];
-            uv[_X_] := uv[_X_] + FMesh.TexIndex[FIndexVector.TexIndices[2]][_X_] * Vector3D[_Z_];
+          uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector.TexIndices[0]][_Y_] * Vector3D[_X_];
+          uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector.TexIndices[1]][_Y_] * Vector3D[_Y_];
+          uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector.TexIndices[2]][_Y_] * Vector3D[_Z_];
 
-            uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector.TexIndices[0]][_Y_] * Vector3D[_X_];
-            uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector.TexIndices[1]][_Y_] * Vector3D[_Y_];
-            uv[_Y_] := uv[_Y_] + FMesh.TexIndex[FIndexVector.TexIndices[2]][_Y_] * Vector3D[_Z_];
-
-            Pixel := FTexture.Pixel[Floor(uv[_X_] * FTexture.Width ), 
-                                    Floor(uv[_Y_] * FTexture.Height)];
-            Color := [Floor(Pixel[_X_] * d), 
-                      Floor(Pixel[_Y_] * d), 
-                      Floor(Pixel[_Z_] * d), 
-                      255];
-          end
-          else
-          begin
-            Color := [Floor(FColor[_X_] * d), Floor(FColor[_Y_] * d), Floor(FColor[_Z_] * d), FColor[_W_]];
-          end; // if ()
-
-          FImage.Pixel[x, y] := BlendColor(Color, FImage.Pixel[x, y], FColorBlendMode);
+          Pixel := FTexture.Pixel[Floor(uv[_X_] * FTexture.Width ), 
+                                  Floor(uv[_Y_] * FTexture.Height)];
+          Color := [Floor(Pixel[_X_] * d), 
+                    Floor(Pixel[_Y_] * d), 
+                    Floor(Pixel[_Z_] * d), 
+                    255];
+        end
+        else
+        begin
+          Color := [Floor(FColor[_X_] * d), Floor(FColor[_Y_] * d), Floor(FColor[_Z_] * d), FColor[_W_]];
         end; // if ()
+
+        if (FColorBlendMode = COLOR_BLEND_MODE_NONE) then
+          FImage.Pixel[x, y] := Color
+        else
+          FImage.Pixel[x, y] := BlendColor(Color, FImage.Pixel[x, y], FColorBlendMode);
       end; // if ()
     end; // for
   end; // for
@@ -257,9 +234,9 @@ end; // Rasterize()
 
 procedure TRenderer.RenderTriangle(v0 : TVector4D; v1 : TVector4D; v2 : TVector4D);
 begin
-  v0 := MatrixMultiply(MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), FProjMatrix), v0);
-  v1 := MatrixMultiply(MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), FProjMatrix), v1);
-  v2 := MatrixMultiply(MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), FProjMatrix), v2);
+  v0 := MatrixMultiply(MatrixMultiply(MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), FProjMatrix), FViewportMatrix), v0);
+  v1 := MatrixMultiply(MatrixMultiply(MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), FProjMatrix), FViewportMatrix), v1);
+  v2 := MatrixMultiply(MatrixMultiply(MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), FProjMatrix), FViewportMatrix), v2);
   Rasterize(To3D(v0), To3D(v1), To3D(v2));
 end; // RenderTriangle()
 
@@ -290,9 +267,9 @@ procedure TRenderer.ClearDepthBuffer;
 var
   i : Integer;
 begin
-  for i:=0 to FImage.Width * FImage.Height - 1  do
+  for i:=0 to FImage.Width * FImage.Height - 1 do
   begin
-    FImage.DepthAtIdx[i] := -INFINITY;
+    FImage.DepthAtIdx[i] := 255.0;
   end; // for i
 end; // ClearDeapthBuffer()
 
@@ -300,6 +277,41 @@ procedure TRenderer.BindTexture(Image : TImage);
 begin
   FTexture := Image;
 end; // BindTexture()
+
+procedure TRenderer.Viewport(X : Integer; Y : Integer; Width : Integer; Height : Integer);
+const
+  Depth : Double = 255.0;
+begin
+  FViewportWidth       := Width           ;
+  FViewportHeight      := Height          ;
+  FViewportMatrix      := IdentityMatrix4D;
+  FViewportMatrix[0,0] :=     Width  / 2.0;
+  FViewportMatrix[1,1] :=     Height / 2.0;
+  FViewportMatrix[0,3] := X + Width  / 2.0;
+  FViewportMatrix[1,3] := Y + Height / 2.0;
+  FViewportMatrix[2,2] :=     Depth  / 2.0;
+  FViewportMatrix[2,3] :=     Depth  / 2.0;
+  WriteLn(Format('W: %d H: %d', [Width, Height]));
+end; // Viewport()
+
+procedure TRenderer.PerspectiveProj(NearPlane : Double; FarPlane : Double; FieldOfView : Double);
+var
+  e : Double;
+begin
+  e := 1.0 / Tan(DegToRad(FieldOfView / 2.0));
+  FProjMatrix := IdentityMatrix4D;
+  FProjMatrix[0,0] := e;
+  FProjMatrix[1,1] := e / (FViewportHeight / FViewportWidth);
+  FProjMatrix[2,2] := -(    FarPlane + NearPlane) / (FarPlane - NearPlane);
+  FProjMatrix[2,3] := -(2 * FarPlane * NearPlane) / (FarPlane - NearPlane);
+  FProjMatrix[3,2] := -1.0;
+  FProjMatrix[3,3] := 0.0;
+end; // PerspectiveProj()
+
+procedure TRenderer.ModelMatrix(M : TMatrix4D );
+begin
+  FModelMatrix := M;
+end; // ModelMatrix()
 
 begin
 end.

@@ -33,6 +33,9 @@ GLuint texture;
 char* buffer;
 int width, height;
 
+int viewport_width;
+int viewport_height;
+
 void error_callback(int error, const char* description) 
 {
     fprintf(stderr, "Error: %s (%d)\n", description, error);
@@ -40,7 +43,17 @@ void error_callback(int error, const char* description)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
+    viewport_width = width;
+    viewport_height = height;
     glViewport(0, 0, width, height);
+}
+
+int window_width() {
+    return viewport_width;
+}
+
+int window_height() {
+    return viewport_height;
 }
 
 int window_init(char* buf, int w, int h)
@@ -48,6 +61,8 @@ int window_init(char* buf, int w, int h)
     buffer = buf;
     width = w;
     height = h;
+    viewport_width = w;
+    viewport_height = h;
 
     glfwSetErrorCallback(error_callback);
     if (!glfwInit()) 

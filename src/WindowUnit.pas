@@ -18,6 +18,9 @@ function window_init(
   Height : cint
 ) : cint; cdecl; external;
 
+function window_width  : cint; cdecl; external;
+function window_height : cint; cdecl; external;
+
 function window_update() : cint; cdecl; external;
 procedure window_destroy(); cdecl; external;
 

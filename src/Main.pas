@@ -33,7 +33,7 @@ begin
   PPMExporter := TPPMExporter  .Create;
   PNGExporter := TPNGExporter  .Create;
   ObjReader   := TObjReader    .Create;
-  Renderer    := TRenderer     .Create(512, 512);
+  Renderer    := TRenderer     .Create(640, 460);
   CameraPos   := Z_AXIS;
   try
     WriteLn('Loading model...');
@@ -48,19 +48,22 @@ begin
     while UpdateWindow do
     begin
       FromTime := Now;
-      Renderer.DepthTest       := TRUE;
-      Renderer.BackFaceCulling := TRUE;
-      Renderer.Lighting        := TRUE;
-      Renderer.ColorBlendMode := COLOR_BLEND_MODE_ONE_MINUS_ALPHA;
-      Renderer.ClearColor([0, 0, 0, 0]); // transparent
-      Renderer.ClearDepthBuffer;
-      // Renderer.BindTexture(Texture);
-      Renderer.Render(ObjReader.Mesh);
 
       CameraPos[0] := Sin(Time);
       CameraPos[1] := 0.0;
-      CameraPos[2] := 1.0;
+      CameraPos[2] := 2.0;
       Renderer.Camera.Eye := CameraPos;
+
+      Renderer.DepthTest       := TRUE;
+      Renderer.BackFaceCulling := TRUE;
+      Renderer.Lighting        := TRUE;
+      Renderer.ColorBlendMode := COLOR_BLEND_MODE_NONE;
+      Renderer.ClearColor([0, 0, 0, 0]); // transparent
+      Renderer.ClearDepthBuffer;
+      Renderer.BindTexture(Texture);
+      Renderer.Viewport(0, 0, Renderer.Image.Width, Renderer.Image.Height);
+      Renderer.PerspectiveProj(0.1, 100.0, 75.0);
+      Renderer.Render(ObjReader.Mesh);
 
       ToTime := Now;
       DiffMillis := MilliSecondsBetween(FromTime, ToTime);
