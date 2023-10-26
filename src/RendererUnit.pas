@@ -291,7 +291,6 @@ begin
   FViewportMatrix[1,3] := Y + Height / 2.0;
   FViewportMatrix[2,2] :=     Depth  / 2.0;
   FViewportMatrix[2,3] :=     Depth  / 2.0;
-  WriteLn(Format('W: %d H: %d', [Width, Height]));
 end; // Viewport()
 
 procedure TRenderer.PerspectiveProj(NearPlane : Double; FarPlane : Double; FieldOfView : Double);
