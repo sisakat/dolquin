@@ -301,10 +301,10 @@ begin
   FProjMatrix := IdentityMatrix4D;
   FProjMatrix[0,0] := e;
   FProjMatrix[1,1] := e / (FViewportHeight / FViewportWidth);
-  FProjMatrix[2,2] := -(    FarPlane + NearPlane) / (FarPlane - NearPlane);
+  FProjMatrix[2,2] := -(    FarPlane + NearPlane) / (FarPlane - NearPlane); // Negative sign means greater depth value for closer objects
   FProjMatrix[2,3] := -(2 * FarPlane * NearPlane) / (FarPlane - NearPlane);
-  FProjMatrix[3,2] := -1.0;
-  FProjMatrix[3,3] := 0.0;
+  FProjMatrix[3,2] := -1.0;                                                 // Negative sign flips the Z coordinate
+  FProjMatrix[3,3] := 0.0;                                                  // so that the camera looks into negative Z axis 
 end; // PerspectiveProj()
 
 procedure TRenderer.ModelMatrix(M : TMatrix4D );
