@@ -7,9 +7,25 @@ interface
 uses LinearAlgebra, Mesh, Graphics;
 
 type
+  TCamera = class(TObject)
+  private
+    FEye    : TVector3D;
+    FCenter : TVector3D;
+    FUp     : TVector3D;
+
+    function GetViewMatrix : TMatrix4D;
+  public
+    constructor Create;
+    destructor  Destroy; override;
+
+    property ViewMatrix : TMatrix4D read GetViewMatrix;
+  end;
+
+type
   TRenderer = class(TObject)
   public
   private
+    FCamera          : TCamera        ;
     FImage           : TRenderImage   ;
     FColor           : TColor         ;
     FColorBlendMode  : TColorBlendMode;
@@ -61,9 +77,28 @@ implementation
 uses
   Math, SysUtils;
 
+constructor TCamera.Create;
+begin
+  inherited;
+  FEye    := Z_AXIS        ;
+  FCenter := ZERO_VECTOR_3D;
+  FUp     := Y_AXIS        ;
+end; // Create()
+
+destructor TCamera.Destroy;
+begin
+  inherited;
+end; // Destroy()
+
+function TCamera.GetViewMatrix : TMatrix4D;
+begin
+  Result := LookAt(FEye, FCenter, FUp);
+end; // GetViewMatrix()
+
 constructor TRenderer.Create(Width : Integer; Height : Integer);
 begin
   inherited Create;
+  FCamera          := TCamera.Create;
   FImage           := TRenderImage.Create(Width, Height);
   FColor           := [255, 255, 255, 255];
   FColorBlendMode  := COLOR_BLEND_MODE_NONE;
@@ -76,7 +111,9 @@ begin
   FProjMatrix      := IdentityMatrix4D;
 
   FModelMatrix[0,0] := -1;
-  FModelMatrix[1,1] := -1.0;
+  FModelMatrix[1,1] := -1;
+  FViewMatrix       := FCamera.ViewMatrix;
+  FProjMatrix[3,2]  := -1/1.5;
 
   ClearDepthBuffer;
   ClearColor([0, 0, 0, 255]);
@@ -85,6 +122,8 @@ end; // Create()
 destructor TRenderer.Destroy;
 begin
   inherited;
+  FreeAndNil(FImage);
+  FreeAndNil(FCamera);
 end; // Destroy()
 
 procedure TRenderer.Rasterize(v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);

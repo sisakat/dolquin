@@ -18,6 +18,7 @@ type
   TMatrix4D = array[0..3] of TVector4D;
 
 const
+  ZERO_VECTOR_3D : TVector3D = (0, 0, 0);
   X_AXIS : TVector3D = (1, 0, 0);
   Y_AXIS : TVector3D = (0, 1, 0);
   Z_AXIS : TVector3D = (0, 0, 1);
@@ -36,30 +37,33 @@ procedure WriteVector3D (A : TVector3D);
 procedure WriteVector4D (A : TVector4D);
 procedure WriteMatrix4D (A : TMatrix4D);
 
-function VectorSubtract (A : TVector3D; B : TVector3D  ) : TVector3D; overload;
-function VectorSubtract (A : TVector4D; B : TVector4D  ) : TVector4D; overload;
-function VectorMultiply (A : TVector3D; B : TVector3D  ) : Double   ; overload;
-function VectorMultiply (A : TVector4D; B : TVector4D  ) : Double   ; overload;
-function VectorScale    (A : TVector3D; Scalar : Double) : TVector3D; overload;
-function VectorScale    (A : TVector4D; Scalar : Double) : TVector4D; overload;
-function VectorNormalize(A : TVector3D                 ) : TVector3D; overload;
-function VectorNormalize(A : TVector4D                 ) : TVector4D; overload;
-function VectorLength   (A : TVector3D                 ) : Double   ; overload;
-function VectorLength   (A : TVector4D                 ) : Double   ; overload;
-function VectorCross    (A : TVector3D; B : TVector3D  ) : TVector3D; overload;
-function VectorCross    (A : TVector4D; B : TVector4D  ) : TVector4D; overload;
-function To3D           (A : TVector4D                 ) : TVector3D;
-function To4D           (A : TVector3D                 ) : TVector4D;
+function VectorSubtract (A : TVector3D; B : TVector3D   ) : TVector3D; overload;
+function VectorSubtract (A : TVector4D; B : TVector4D   ) : TVector4D; overload;
+function VectorMultiply (A : TVector3D; B : TVector3D   ) : Double   ; overload;
+function VectorMultiply (A : TVector4D; B : TVector4D   ) : Double   ; overload;
+function VectorScale    (A : TVector3D; Scalar : Double ) : TVector3D; overload;
+function VectorScale    (A : TVector4D; Scalar : Double ) : TVector4D; overload;
+function VectorNormalize(A : TVector3D                  ) : TVector3D; overload;
+function VectorNormalize(A : TVector4D                  ) : TVector4D; overload;
+function VectorLength   (A : TVector3D                  ) : Double   ; overload;
+function VectorLength   (A : TVector4D                  ) : Double   ; overload;
+function VectorCross    (A : TVector3D; B : TVector3D   ) : TVector3D; overload;
+function VectorCross    (A : TVector4D; B : TVector4D   ) : TVector4D; overload;
+function To3D           (A : TVector4D                  ) : TVector3D;
+function To4D           (A : TVector3D; W : Double = 1.0) : TVector4D;
 
 function MatrixMultiply (B : TMatrix3D; A : TMatrix3D) : TMatrix3D; overload;
 function MatrixMultiply (B : TMatrix4D; A : TMatrix4D) : TMatrix4D; overload;
 function MatrixMultiply (A : TMatrix4D; V : TVector4D) : TVector4D; overload;
+function MatrixTranspose(A : TMatrix4D               ) : TMatrix4D;
 
 function RotationMatrixX(AngleRad : Double) : TMatrix4D;
 function RotationMatrixY(AngleRad : Double) : TMatrix4D;
 function RotationMatrixZ(AngleRad : Double) : TMatrix4D;
 function TranslationMatrix(X : Double; Y : Double; Z : Double) : TMatrix4D;
 procedure SetRotationMatrix(var M : TMatrix4D; const R : TMatrix4D);
+
+function LookAt(Eye : TVector3D; Center : TVector3D; Up : TVector3D) : TMatrix4D;
 
 implementation
 
@@ -192,12 +196,12 @@ begin
   Result[_Z_] := A[_Z_] / A[_W_];
 end; // To3D()
 
-function To4D(A : TVector3D) : TVector4D;
+function To4D(A : TVector3D; W : Double) : TVector4D;
 begin
   Result[_X_] := A[_X_];
   Result[_Y_] := A[_Y_];
   Result[_Z_] := A[_Z_];
-  Result[_W_] := 1.0   ;
+  Result[_W_] := W     ;
 end; // To4D()
 
 function MatrixMultiply(B : TMatrix3D; A : TMatrix3D) : TMatrix3D;
@@ -248,6 +252,15 @@ begin
   Result[_W_] := A[3,0] * V[0] + A[3,1] * V[1] + A[3,2] * V[2] + A[3,3] * V[3];
 end; // MatrixMultiply()
 
+function MatrixTranspose(A : TMatrix4D) : TMatrix4D;
+var
+  i, j : Integer;
+begin
+  for i:=0 to 3 do
+    for j:=0 to 3 do
+      Result[i,j] := A[j,i];
+end; // MatrixTranspose()
+
 function RotationMatrixX(AngleRad : Double) : TMatrix4D;
 begin
   Result := IdentityMatrix4D;
@@ -291,6 +304,23 @@ begin
     for j:=0 to 2 do
       M[i,j] := R[i,j];
 end; // SetRotationMatrix()
+
+function LookAt(Eye : TVector3D; Center : TVector3D; Up : TVector3D) : TMatrix4D;
+var
+  X, Y, Z : TVector3D;
+begin
+  Result := IdentityMatrix4D;
+  Z := VectorNormalize(VectorSubtract(Eye, Center));
+  X := VectorNormalize(VectorCross   (Up , Z     ));
+  Y := VectorNormalize(VectorCross   (Z  , X     ));
+  
+  Result    := MatrixTranspose(Result);
+  Result[0] := To4D(X, 0.0);
+  Result[1] := To4D(Y, 0.0);
+  Result[2] := To4D(Z, 0.0);
+  Result[3] := To4D(VectorScale(Eye, -1.0));
+  Result    := MatrixTranspose(Result);
+end; // LookAt()
 
 begin
 end.
