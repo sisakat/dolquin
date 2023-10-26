@@ -19,6 +19,7 @@ type
     destructor  Destroy; override;
 
     property ViewMatrix : TMatrix4D read GetViewMatrix;
+    property Eye        : TVector3D read FEye write FEye;
   end;
 
 type
@@ -44,7 +45,7 @@ type
     procedure Rasterize     (v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);
     procedure RenderTriangle(v0 : TVector4D; v1 : TVector4D; v2 : TVector4D);
     
-  public
+  public   
     constructor Create(Width : Integer; Height : Integer);
     destructor  Destroy; override;
 
@@ -52,6 +53,8 @@ type
     procedure ClearColor      (Color : TColor);
     procedure ClearDepthBuffer(              );
     procedure BindTexture     (Image : TImage);
+
+    property Camera : TCamera read FCamera;
     
     // The rendered image (including depth-buffer)
     property Image : TRenderImage read FImage; 
@@ -110,8 +113,6 @@ begin
   FViewMatrix      := IdentityMatrix4D;
   FProjMatrix      := IdentityMatrix4D;
 
-  FModelMatrix[0,0] := -1;
-  FModelMatrix[1,1] := -1;
   FViewMatrix       := FCamera.ViewMatrix;
   FProjMatrix[3,2]  := -1/1.5;
 
@@ -266,6 +267,7 @@ procedure TRenderer.Render(Mesh : TMesh);
 var
   i : Integer;
 begin
+  FViewMatrix := FCamera.ViewMatrix;
   FMesh := Mesh;
   for i:=0 to Mesh.IndexCount-1 do
   begin
