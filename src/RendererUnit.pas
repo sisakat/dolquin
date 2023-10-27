@@ -23,6 +23,20 @@ type
   end;
 
 type
+  TShader = class(TObject)
+  public
+    ModelMatrix    : TMatrix4D;
+    ViewMatrix     : TMatrix4D;
+    ProjMatrix     : TMatrix4D;
+    ViewportMatrix : TMatrix4D;
+    Mesh           : TMesh;
+    Indices        : TIndexVector;
+
+    //function VertexShader(Indices : TIndexVector)
+
+  end;
+
+type
   TRenderer = class(TObject)
   private
     FCamera          : TCamera        ;
@@ -45,7 +59,7 @@ type
     FViewportHeight  : Integer        ;
 
   protected
-    procedure Rasterize     (v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);
+    procedure Rasterize     (v0 : TVector3D; v1 : TVector3D; v2 : TVector3D; vs0 : TVector3D; vs1 : TVector3D; vs2 : TVector3D);
     procedure RenderTriangle(v0 : TVector4D; v1 : TVector4D; v2 : TVector4D);
     
   public   
@@ -132,7 +146,7 @@ begin
   FreeAndNil(FCamera);
 end; // Destroy()
 
-procedure TRenderer.Rasterize(v0 : TVector3D; v1 : TVector3D; v2 : TVector3D);
+procedure TRenderer.Rasterize(v0 : TVector3D; v1 : TVector3D; v2 : TVector3D; vs0 : TVector3D; vs1 : TVector3D; vs2 : TVector3D);
   procedure BoundingBox(
     x0 : Integer; y0 : Integer;
     x1 : Integer; y1 : Integer;
@@ -156,6 +170,7 @@ var
   uv                     : TVector3D;
   Color, Pixel           : TColor   ;
   d                      : Double   ;
+  intensity              : Double   ;
 begin
   if Lighting or BackfaceCulling then
   begin
@@ -169,12 +184,12 @@ begin
   if BackfaceCulling and (d < 0.0) then Exit;
   if not Lighting then d := 1.0;
 
-  x0 := Floor(v0[_X_]);
-  y0 := Floor(v0[_Y_]);
-  x1 := Floor(v1[_X_]);
-  y1 := Floor(v1[_Y_]);
-  x2 := Floor(v2[_X_]);
-  y2 := Floor(v2[_Y_]);
+  x0 := Floor(vs0[_X_]);
+  y0 := Floor(vs0[_Y_]);
+  x1 := Floor(vs1[_X_]);
+  y1 := Floor(vs1[_Y_]);
+  x2 := Floor(vs2[_X_]);
+  y2 := Floor(vs2[_Y_]);
 
   BoundingBox(x0, y0, x1, y1, x2, y2, bx0, by0, bx1, by1);
   for y:=by0 to by1 do
@@ -189,9 +204,9 @@ begin
       // Find the Z-value of the pixel by multiplying the
       // triangle vertices with the barycentric coordinates of the pixel.
       z := 0.0;
-      z := z + v0[_Z_] * Vector3D[_X_];
-      z := z + v1[_Z_] * Vector3D[_Y_];
-      z := z + v2[_Z_] * Vector3D[_Z_];
+      z := z + vs0[_Z_] * Vector3D[_X_];
+      z := z + vs1[_Z_] * Vector3D[_Y_];
+      z := z + vs2[_Z_] * Vector3D[_Z_];
 
       if (FImage.Depth[x, y] > z) or not DepthTest then
       begin
@@ -233,11 +248,18 @@ begin
 end; // Rasterize()
 
 procedure TRenderer.RenderTriangle(v0 : TVector4D; v1 : TVector4D; v2 : TVector4D);
+var
+  vs0 : TVector4D;
+  vs1 : TVector4D;
+  vs2 : TVector4D;
 begin
-  v0 := MatrixMultiply(MatrixMultiply(MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), FProjMatrix), FViewportMatrix), v0);
-  v1 := MatrixMultiply(MatrixMultiply(MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), FProjMatrix), FViewportMatrix), v1);
-  v2 := MatrixMultiply(MatrixMultiply(MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), FProjMatrix), FViewportMatrix), v2);
-  Rasterize(To3D(v0), To3D(v1), To3D(v2));
+  v0 := MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), v0);
+  v1 := MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), v1);
+  v2 := MatrixMultiply(MatrixMultiply(FModelMatrix, FViewMatrix), v2);
+  vs0 := MatrixMultiply(MatrixMultiply(FProjMatrix, FViewportMatrix), v0);
+  vs1 := MatrixMultiply(MatrixMultiply(FProjMatrix, FViewportMatrix), v1);
+  vs2 := MatrixMultiply(MatrixMultiply(FProjMatrix, FViewportMatrix), v2);
+  Rasterize(To3D(v0), To3D(v1), To3D(v2), To3D(vs0), To3D(vs1), To3D(vs2));
 end; // RenderTriangle()
 
 procedure TRenderer.Render(Mesh : TMesh);
