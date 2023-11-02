@@ -33,7 +33,7 @@ begin
   PPMExporter := TPPMExporter  .Create;
   PNGExporter := TPNGExporter  .Create;
   ObjReader   := TObjReader    .Create;
-  Renderer    := TRenderer     .Create(640, 460);
+  Renderer    := TRenderer     .Create(1024, 1024);
   CameraPos   := Z_AXIS;
   try
     WriteLn('Loading model...');
@@ -49,9 +49,9 @@ begin
     begin
       FromTime := Now;
 
-      CameraPos[0] := Sin(Time);
+      CameraPos[0] := 0.0;
       CameraPos[1] := 0.0;
-      CameraPos[2] := 2.0;
+      CameraPos[2] := 3.0;
       Renderer.Camera.Eye := CameraPos;
 
       Renderer.DepthTest       := TRUE;
@@ -62,7 +62,11 @@ begin
       Renderer.ClearDepthBuffer;
       Renderer.BindTexture(Texture);
       Renderer.Viewport(0, 0, Renderer.Image.Width, Renderer.Image.Height);
-      Renderer.PerspectiveProj(0.1, 100.0, 75.0);
+      
+      //Renderer.PerspectiveProj(0.1, 100.0, 75.0);
+      Renderer.OrthographicProj(-1.0, 1.0, -1.0, 1.0, 0.01, 10.0);
+      
+      Renderer.ModelMatrix(RotationMatrixY(Time));
       Renderer.Render(ObjReader.Mesh);
 
       ToTime := Now;
