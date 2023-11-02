@@ -72,6 +72,7 @@ type
     procedure BindTexture     (Image : TImage);
     procedure Viewport        (X : Integer; Y : Integer; Width : Integer; Height : Integer);
     procedure PerspectiveProj (NearPlane : Double; FarPlane : Double; FieldOfView : Double);
+    procedure OrthographicProj(Left : Double; Right : Double; Bottom : Double; Top : Double; NearPlane : Double; FarPlane : Double);
     procedure ModelMatrix     (M : TMatrix4D );
 
     property Camera : TCamera read FCamera;
@@ -328,6 +329,19 @@ begin
   FProjMatrix[3,2] := -1.0;                                                 // Negative sign flips the Z coordinate
   FProjMatrix[3,3] := 0.0;                                                  // so that the camera looks into negative Z axis 
 end; // PerspectiveProj()
+
+procedure TRenderer.OrthographicProj(
+  Left : Double; Right : Double; Bottom : Double; 
+  Top : Double; NearPlane : Double; FarPlane : Double);
+begin
+  FProjMatrix := IdentityMatrix4D;
+  FProjMatrix[0,0] :=  2.0 / (Right - Left);
+  FProjMatrix[1,1] :=  2.0 / (Top - Bottom);
+  FProjMatrix[2,2] := -2.0 / (FarPlane - NearPlane);
+  FProjMatrix[0,3] := -(Right    + Left     ) / (Right    - Left     );
+  FProjMatrix[1,3] := -(Top      + Bottom   ) / (Top      - Bottom   );
+  FProjMatrix[2,3] := -(FarPlane + NearPlane) / (FarPlane - NearPlane);
+end; // OrthographicProj()
 
 procedure TRenderer.ModelMatrix(M : TMatrix4D );
 begin
